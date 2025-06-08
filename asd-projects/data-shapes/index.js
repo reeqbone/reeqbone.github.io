@@ -40,7 +40,7 @@ $(document).ready(function () {
   
   var shape = {
     color: "blue",
-    value: "circle",
+    shape: "circle",
     repeat: 3,
   };
 
