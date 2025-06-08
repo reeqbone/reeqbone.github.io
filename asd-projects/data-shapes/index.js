@@ -40,13 +40,18 @@ $(document).ready(function () {
   
   var shape = {
     color: "blue",
-    value: "cirlce",
+    value: "circle",
     repeat: 3,
   };
 
-  dataShapes.push(shape);
+  dataShapes.push(shape); // Add the custom shape to the main dataset
   
   // TODO 2: add a new property to all data shapes
+
+  // This will loop through every object within dataShapes.
+  // If the color is red it would bounce, if the color for the shape is blue it will blink,
+  // any other color will cause the shape to spin. 
+  // This only applys to shapes within the goodBehavior set.
 
   for (var i = 0; i < dataShapes.length; i++) {
     var currentShape = dataShapes[i];
@@ -63,12 +68,21 @@ $(document).ready(function () {
 
   // TODO 3-a: add a function that handles the static display type
   
+  // Creates a function called handleStatic that takes the paramater data
+  // takes a shape data and then calls a background functionw with the object using paramaeter data
+  // Sets animation type to 1 which would display a static look on the shape without any animation. 
+
+
   function handleStatic(data){
     setBackgroundWithObject(data);
     animationDetails.displayType = 1;
   }
 
   // TODO 4-a: add a function that handles the good display type
+
+  // Creates a function named handleGood which accepts color, shape and repat parameter
+  // Uses all this data (which are the parameters) then calls a background setup function
+  // Sets animation to 2, which will display good behavoior animaton
 
   function handleGood(color, shape, repeat){
     setBackgroundWithSimple(color, shape, repeat);
@@ -78,6 +92,10 @@ $(document).ready(function () {
 
   // TODO 5-a: add a function that handles the bad display type
   
+  // Accepts a data shape object and repeat count/ just creating a function that takes paramets data nd repat
+  // Increatments/updates repat by 1
+  //  sets animation to 3 which displays a bad beahvour animation
+
   function handleBad(data, repeat) {
   repeat += 1;
   setBackgroundWithMixed(data, repeat);
@@ -88,18 +106,22 @@ $(document).ready(function () {
   // BUTTON HANDLERS BELOW HERE (3-b, 4-b, 5-b) ///
   /////////////////////////////////////////////////
 
+    // 3b: If display button is click, it will run a static handler which would pause the current shape in the moment and display it.
+    // Stops the current shape from being animated and display it as is
   function staticDisplay() {
     // TODO 3-b: call your handleStatic function
     handleStatic(dataShapes[currentIndex]);
   } 
 
+  //4b: When good display button is clicked, it gtabs color/shape/repat from the current shape. 
+  // All this information is then passed onto good handler
   function goodDisplay() {
     // TODO 4-b: call your handleGood function
    var currentShape = dataShapes[currentIndex];
     handleGood(currentShape.color, currentShape.shape, currentShape.repeat);
     
   }
-
+   // 5b: When display bad is clicked, pass the shape and repeat unformation to bad handler
   function badDisplay() {
     // TODO 5-b: call your handleBad function
     var currentShape = dataShapes[currentIndex];
