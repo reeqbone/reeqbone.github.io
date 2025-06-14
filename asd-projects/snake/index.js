@@ -50,11 +50,11 @@ function init() {
   snake.body = [];
 
   // make the first snakeSquare and set it as the head
-  makeSnakeSquare(10, 10);
+  makeSnakeSquare(10, 10); // Places snake at the center of the board
   snake.head = snake.body[0];
 
   // TODO 4b-2: initialize the apple
-  makeApple()
+  makeApple() //Randomy places apple
 
   // TODO 5a: Initialize the interval
   // start update interval
@@ -91,13 +91,19 @@ function checkForNewDirection(event) {
   perpendicular to the current direction
   */
 
-  if (activeKey === KEY.LEFT) {
-    snake.head.direction = "left";
+  // I simplfy this using logical condtionals. Did it as a test to test my skills.
+  if (activeKey === KEY.LEFT || activeKey === KEY.RIGHT || activeKey === KEY.UP || activeKey === KEY.DOWN) {
+    snake.head.direction = 
+      activeKey === KEY.LEFT ? "left" :
+      activeKey === KEY.RIGHT ? "right" :
+      activeKey === KEY.UP ? "up" :
+      activeKey === KEY.DOWN ? "down":
+    snake.head.direction; // keep the current direction if no valid key is pressed
   }
 
   // FILL IN THE REST
 
-  // console.log(snake.head.direction);     // uncomment me!
+  console.log(snake.head.direction);     // uncomment me!
 }
 
 function moveSnake() {
