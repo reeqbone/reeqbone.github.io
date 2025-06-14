@@ -20,8 +20,8 @@ var score = 0;
 // Constant Variables
 var ROWS = 30;
 var COLUMNS = 30;
-var BROWS = 25; // Apple cannot appear to close to sides or top
-var BCOLUMNS = 25; // Apple cannot appear to close to sides or top
+var BROWS = 19; // Apple cannot appear to close to sides or top
+var BCOLUMNS = 29; // Apple cannot appear to close to sides or top
 var SQUARE_SIZE = 20;
 var KEY = {
   LEFT: 37,
@@ -480,7 +480,7 @@ handleAppleCollision = function() { // replacing the original handleAppleCollisi
 
 
 function increaseGameSpeed() {
-  // Decrease interval time by 0.5ms, but don't go below a minimum of 15fps (66.6ms)
+  // Decrease interval time by 3 ms, but don't go below a minimum of 30fps (33ms)
   snake.intervalTime =  (snake.intervalTime - 3); // makes sure that a boundry is set so the game does not go too fast
   clearInterval(updateInterval); // Clear the existing interval and updates the game with a new one
   updateInterval = setInterval(update, snake.intervalTime); // Set a new interval with the updated speed
