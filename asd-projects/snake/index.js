@@ -20,6 +20,8 @@ var score = 0;
 // Constant Variables
 var ROWS = 30;
 var COLUMNS = 30;
+var BROWS = 25; // Apple cannot appear to close to sides or top
+var BCOLUMNS = 25; // Apple cannot appear to close to sides or top
 var SQUARE_SIZE = 20;
 var KEY = {
   LEFT: 37,
@@ -64,16 +66,10 @@ function init() {
   // TODO 5a: Initialize the interval
   // start update interval
   // Set initial interval time
-  snake.intervalTime = 110; // Anytime an apple is eaten, the game increases in speed // Functional,ity is found in Extras section
+  snake.intervalTime = 115; // Anytime an apple is eaten, the game increases in speed // Functional,ity is found in Extras section
   updateInterval = setInterval(update, snake.intervalTime); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
 }
 
-// Patch handleAppleCollision to increase speed
-const originalHandleAppleCollision = handleAppleCollision;
-handleAppleCollision = function() {
-  originalHandleAppleCollision.apply(this, arguments);
-  increaseGameSpeed();
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////// PROGRAM FUNCTIONS ////////////////////////////////////
@@ -223,7 +219,7 @@ function hasCollidedWithApple() {
   HINT: Both the apple and the snake's head are aware of their own row and column
   */
   if (snake.head.row === apple.row && snake.head.column === apple.column) {
-    return true
+    return true;
   }
 
   return false;
@@ -411,8 +407,8 @@ function getRandomAvailablePosition() {
 
   /* Generate random positions until one is found that doesn't overlap with the snake */
   while (!spaceIsAvailable) {
-    randomPosition.column = Math.floor(Math.random() * COLUMNS);
-    randomPosition.row = Math.floor(Math.random() * ROWS);
+    randomPosition.column = Math.floor(Math.random() * BCOLUMNS);
+    randomPosition.row = Math.floor(Math.random() * BROWS);
     spaceIsAvailable = true;
 
     /*
@@ -449,7 +445,7 @@ function calculateHighScore() {
                      |_|   () Extras  ()
 */
 
-// Variable to keep track of deaths (wall hits or self-collisions)
+// Variable to keep track of deaths (wall hits or self collisions)
 var deathCount = []; // use a number to count deaths
 
 // Display death count on the page
@@ -472,12 +468,34 @@ endGame = function() { // replacing the original endGame function, but still kee
 };
 
 ///////////////
-
 // Increase game speed each time apple is aten
-function increaseGameSpeed() {
-  // Decrease interval time by 0.5ms, but don't go below a minimum
-  snake.intervalTime = (snake.intervalTime - 1);
-  clearInterval(updateInterval);
-  updateInterval = setInterval(update, snake.intervalTime);
-}
+ 
+// Lines 472 - 476 has same idea as lines 460 - 465, but this time it is used to increase the game speed each time an apple is eaten.
+var rbHandleAppleCollision = handleAppleCollision; // stores handleAppleCollision() function within a new variable called rbHandleAppleCollision.
+handleAppleCollision = function() { // replacing the original handleAppleCollision function, but still keeps its original code and data. Acts as a backup for storing data
+  rbHandleAppleCollision(); // Calls the original handleAppleCollision function to keep its functionality
+  increaseGameSpeed(); // Calls the increaseGameSpeed function to increase the game speed each time an apple is eaten
+ // console.log("Apple eaten! Speed increased!"); // Debugging purposes to see if the speed is increasing
+};
 
+
+function increaseGameSpeed() {
+  // Decrease interval time by 0.5ms, but don't go below a minimum of 15fps (66.6ms)
+  snake.intervalTime =  (snake.intervalTime - 3); // makes sure that a boundry is set so the game does not go too fast
+  clearInterval(updateInterval); // Clear the existing interval and updates the game with a new one
+  updateInterval = setInterval(update, snake.intervalTime); // Set a new interval with the updated speed
+  console.log("Game speed has increased! New interval time: " + snake.intervalTime + "ms"); //debugging purposes to see if the speed is increasing 
+
+   // Boundry Condtional:
+  if (snake.intervalTime < 33){
+    alert("You have won the game!") // Game is running at unreasonable speed, so the game is over
+    endGame();
+  }
+  else if (score >= 27) { // It takes about 26 apples to win the game (winning game is reaching 35mms speed)
+    alert("Who the HELL ate all MY APPLES!?!"); //Game is running at unreasonable speed, so the game is over
+    endGame();
+  }
+  else if (snake.intervalTime >= 33) { 
+    nun; // do nothing, the game is stil running at a reasonable speed
+  }
+}
