@@ -46,13 +46,19 @@ init();
 
 function init() {
   // TODO 4c-2: initialize the snake
-  
+  // initialize the snake's body as an empty Array
+  snake.body = [];
+
+  // make the first snakeSquare and set it as the head
+  makeSnakeSquare(10, 10);
+  snake.head = snake.body[0];
 
   // TODO 4b-2: initialize the apple
   makeApple()
 
   // TODO 5a: Initialize the interval
-
+  // start update interval
+  updateInterval = setInterval(update, 16.666666666666668); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +71,17 @@ function init() {
  */
 function update() {
   // TODO 5b: Fill in the update function's code block
+  moveSnake();
+
+  if (hasHitWall() || hasCollidedWithSnake()) {
+    endGame();
+  }
+
+  if (hasCollidedWithApple()) {
+    handleAppleCollision();
+  }
 }
+
 
 function checkForNewDirection(event) {
   /* 
