@@ -166,6 +166,28 @@ function hasHitWall() {
   HINT: What will the row and column of the snake's head be if this were the case?
   */
 
+  // Checking if the snake head has moved beyond the left wall. If it has, end the game
+  if (snake.head.column < 0) {
+    endGame();
+  }
+
+  // Checking if the snake head has moved beyond the right wall. If it has, end the game
+  if (snake.head.column >= COLUMNS) {
+    endGame();
+  }
+
+  // Checking if the snake head has moved above the top wall. If it has, end the game
+  if (snake.head.row < 0) {
+    endGame();
+  }
+
+  // Checking if the snake head has moved below the bottom wall. If it has, end the game
+  if (snake.head.row >= ROWS) {
+    endGame();
+  }
+
+  // If none of the above conditions are met, the snake has not hit a wall. If it has, end the game
+  // if I return this to true, it creates a end gamme loop.
   return false;
 }
 
