@@ -458,7 +458,7 @@ var deathCountElement = $("#deathCount"); // Grabs the html element with the ID 
 // Function that updates the text on the screen that will display how much times player has died
 function updateDeathCountDisplay() {
   if (deathCountElement.length) {
-    deathCountElement.text("Deaths: " + deathCount); // 460 checks if deathCountElement exists if it does it updates the text inside the element to show the number of deaths.
+    deathCountElement.text("Deaths: " + deathCount); // 460m checks if deathCountElement exists if it does it updates the text inside the element to show the number of deaths.
   }  // Above coment is done through jQuery
 }
 
