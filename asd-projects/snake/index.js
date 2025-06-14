@@ -26,6 +26,11 @@ var KEY = {
   UP: 38,
   RIGHT: 39,
   DOWN: 40,
+  W: 87,
+  S: 83,
+  A: 65,
+  D: 68
+  // W, A, S, D keys for WASD controls
 };
 
 // interval variable required for stopping the update function when the game ends
@@ -58,7 +63,7 @@ function init() {
 
   // TODO 5a: Initialize the interval
   // start update interval
-  updateInterval = setInterval(update, 16.666666666666668); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
+  updateInterval = setInterval(update, 110); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +105,16 @@ function checkForNewDirection(event) {
       activeKey === KEY.DOWN ? "down":
     snake.head.direction; // keep the current direction if no valid key is pressed
   }
+  
+  // Second Conditonal for WASD CONTROLs
+  if (activeKey === KEY.A || activeKey === KEY.D || activeKey === KEY.W || activeKey === KEY.S) {
+    snake.head.direction = 
+      activeKey === KEY.A ? "left" :
+      activeKey === KEY.D ? "right" :
+      activeKey === KEY.W ? "up" :
+      activeKey === KEY.S ? "down":
+    snake.head.direction; // keep the current direction if no valid key is pressed
+  }
 
   // FILL IN THE REST
 
@@ -126,7 +141,22 @@ function moveSnake() {
   HINT: The snake's head will need to move forward 1 square based on the value
   of snake.head.direction which may be one of "left", "right", "up", or "down"
   */
+
+  if (snake.head.direction === "left") {
+    snake.head.column = snake.head.column - 1;
+  }
+  else if (snake.head.direction === "right") {
+    snake.head.column = snake.head.column + 1;
+  }
+  else if (snake.head.direction === "down") {
+    snake.head.row = snake.head.row + 1;
+  }
+  else if (snake.head.direction === "up") {
+    snake.head.row = snake.head.row - 1;
+  }
+  repositionSquare(snake.head);
 }
+
 
 function hasHitWall() {
   /* 
