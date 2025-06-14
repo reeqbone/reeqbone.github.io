@@ -18,8 +18,8 @@ var score = 0;
 // Game Variables
 
 // Constant Variables
-var ROWS = 20;
-var COLUMNS = 20;
+var ROWS = 30;
+var COLUMNS = 30;
 var SQUARE_SIZE = 20;
 var KEY = {
   LEFT: 37,
@@ -29,7 +29,7 @@ var KEY = {
   W: 87,
   S: 83,
   A: 65,
-  D: 68
+  D: 68,
   // W, A, S, D keys for WASD controls
 };
 
@@ -133,6 +133,20 @@ function moveSnake() {
   column/row properties. 
   
   */
+ for (var i = snake.body.length - 1; i > 0; i--) {
+    var snakeSquare = snake.body[i];
+
+    var nextSnakeSquare = snake.body[i - 1];
+    var nextRow = nextSnakeSquare.row;
+    var nextColumn = nextSnakeSquare.column;
+    var nextDirection = nextSnakeSquare.direction;
+
+    snakeSquare.direction = nextDirection;
+    snakeSquare.row = nextRow;
+    snakeSquare.column = nextColumn;
+    repositionSquare(snakeSquare);
+ }
+
 
   //Before moving the head, check for a new direction from the keyboard input
   checkForNewDirection();
@@ -170,24 +184,24 @@ function hasHitWall() {
 
   // Return true if the snake head has moved beyond the left wall
 
-  debugger;
+  // debugger;
   if (snake.head.column < 0) {
-    return true;
+    endGame();
   }
 
   // Return true if the snake head has moved beyond the right wall
-  if (snake.head.column > COLUMNS) {
-    return true;
+  if (snake.head.column >= COLUMNS) {
+    endGame();
   }
 
   // Return true if the snake head has moved above the top wall
   if (snake.head.row < 0) {
-    return true;
+    endGame();
   }
 
   // Return true if the snake head has moved below the bottom wall
-  if (snake.head.row > ROWS) {
-    return true;
+  if (snake.head.row >= ROWS) {
+    endGame();
   }
 
   // If none of the above conditions are met, the snake has not hit a wall
@@ -201,9 +215,13 @@ function hasCollidedWithApple() {
   
   HINT: Both the apple and the snake's head are aware of their own row and column
   */
+  if (snake.head.row === apple.row && snake.head.column === apple.column) {
+    return true
+  }
 
   return false;
 }
+ 
 
 function handleAppleCollision() {
   // increase the score and update the score DOM element
@@ -227,11 +245,38 @@ function handleAppleCollision() {
   var column = 0;
 
   // code to determine the row and column of the snakeSquare to add to the snake
+  if (snake.tail.direction === "left") {
+    row = snake.tail.row; // if the tail is moving left, the next square will be to the right
+    column = snake.tail.column + 1; // so we add 1 to the column
+  } else if (snake.tail.direction === "right") {
+    row = snake.tail.row; // if the tail is moving right, the next square will be to the left
+    column = snake.tail.column - 1; // so we subtract 1 from the column
+  } else if (snake.tail.direction === "up") {
+    row = snake.tail.row + 1; // if the tail is moving up, the next square will be below it
+    column = snake.tail.column; // so we keep the column the same
+  } else if (snake.tail.direction === "down") {
+    row = snake.tail.row - 1; // if the tail is moving down, the next square will be above it
+    column = snake.tail.column; // so we keep the column the same
+  }
+  // make a new snakeSquare at the determined row and column
+  // and add it to the snake's body
+  // makeSnakeSquare(row, column) will create a new snakeSquare and add it to the snake's body
+  // and position it on the screen
+  // This will also set the new tail to the new snakeSquare
+  // so the snake will grow by one square
 
   makeSnakeSquare(row, column);
 }
 
 function hasCollidedWithSnake() {
+for(var i = 1; i < snake.body.length; i++) {
+    if (snake.body[0].row === snake.body[i].row && snake.body[0].column === snake.body[i].column) {
+      return true;
+      endGame();
+    }
+  }
+
+  
   /* 
   TODO 12: Should return true if the snake's head has collided with any part of the
   snake's body.
@@ -240,6 +285,7 @@ function hasCollidedWithSnake() {
   head and each part of the snake's body also knows its own row and column.
   
   */
+
 
   return false;
 }
@@ -258,6 +304,11 @@ function endGame() {
 
   // restart the game after 500 ms
   setTimeout(init, 500);
+
+  console.log("endGame"); // this is for later, my function will check logs to see if endGame is there, if it is, death count is updated by 1
+  alert("Press Enter or 'Ok' to restart the game!"); 
+  updateDeathCountDisplay()// alert to notify the user that the game has ended and will restart
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +414,7 @@ function getRandomAvailablePosition() {
     spaceIsAvailable to false so that a new position is generated.
     */
   }
-
+  
   return randomPosition;
 }
 
@@ -379,3 +430,36 @@ function calculateHighScore() {
 
   return highScore;
 }
+
+/*
+  _____                 _                      
+ |  __ \               | |                     
+ | |__) |___  ___  __ _| |__   ___  _ __   ___ 
+ |  _  // _ \/ _ \/ _` | '_ \ / _ \| '_ \ / _ \
+ | | \ \  __/  __/ (_| | |_) | (_) | | | |  __/
+ |_|  \_\___|\___|\__, |_.__/ \___/|_| |_|\___|
+                     | |                       
+                     |_|   () Extras  ()
+*/
+
+// Variable to keep track of deaths (wall hits or self-collisions)
+var deathCount = []; // use a number to count deaths
+
+// Display death count on the page
+var deathCountElement = $("#deathCount"); // Grabs the html element with the ID deathCount using jQuery.
+
+// Function that updates the text on the screen that will display how much times player has died
+function updateDeathCountDisplay() {
+  if (deathCountElement.length) {
+    deathCountElement.text("Deaths: " + deathCount); // 405 checks if deathCountElement exists if it does it updates the text inside the element to show the number of deaths.
+  }  // Above coment is done through jQuery
+}
+
+// Wrap the original endGame to count deaths
+var rbEndGame = endGame;  // stores endGame() function within a new variable called rbEndGame. 
+// I edit the code for endGame so its logged inside a console anytime a border is reached, rbEndGame will get all this data and store it in the deathCount variable.
+endGame = function() { // replacing the original endGame function, but still keeps its original code and data. Acts as a backup for storing data
+  deathCount++;
+  updateDeathCountDisplay();
+  rbEndGame();
+};
