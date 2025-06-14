@@ -63,7 +63,9 @@ function init() {
 
   // TODO 5a: Initialize the interval
   // start update interval
-  updateInterval = setInterval(update, 110); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
+  // Set initial interval time
+  snake.intervalTime = 110; // Anytime a apple is eating, the game increases in speed
+  updateInterval = setInterval(update, snake.intervalTime); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,28 +168,29 @@ function hasHitWall() {
   HINT: What will the row and column of the snake's head be if this were the case?
   */
 
-  // Checking if the snake head has moved beyond the left wall. If it has, end the game
+  // Return true if the snake head has moved beyond the left wall
+
+  debugger;
   if (snake.head.column < 0) {
-    endGame();
+    return true;
   }
 
-  // Checking if the snake head has moved beyond the right wall. If it has, end the game
-  if (snake.head.column >= COLUMNS) {
-    endGame();
+  // Return true if the snake head has moved beyond the right wall
+  if (snake.head.column > COLUMNS) {
+    return true;
   }
 
-  // Checking if the snake head has moved above the top wall. If it has, end the game
+  // Return true if the snake head has moved above the top wall
   if (snake.head.row < 0) {
-    endGame();
+    return true;
   }
 
-  // Checking if the snake head has moved below the bottom wall. If it has, end the game
-  if (snake.head.row >= ROWS) {
-    endGame();
+  // Return true if the snake head has moved below the bottom wall
+  if (snake.head.row > ROWS) {
+    return true;
   }
 
-  // If none of the above conditions are met, the snake has not hit a wall. If it has, end the game
-  // if I return this to true, it creates a end gamme loop.
+  // If none of the above conditions are met, the snake has not hit a wall
   return false;
 }
 
