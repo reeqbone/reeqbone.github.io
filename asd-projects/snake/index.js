@@ -59,14 +59,21 @@ function init() {
   snake.head = snake.body[0];
 
   // TODO 4b-2: initialize the apple
-  makeApple() //Randomy places apple
+  makeApple(); // Randomly places apple
 
   // TODO 5a: Initialize the interval
   // start update interval
   // Set initial interval time
-  snake.intervalTime = 110; // Anytime a apple is eating, the game increases in speed
+  snake.intervalTime = 110; // Anytime an apple is eaten, the game increases in speed // Functional,ity is found in Extras section
   updateInterval = setInterval(update, snake.intervalTime); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
 }
+
+// Patch handleAppleCollision to increase speed
+const originalHandleAppleCollision = handleAppleCollision;
+handleAppleCollision = function() {
+  originalHandleAppleCollision.apply(this, arguments);
+  increaseGameSpeed();
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////// PROGRAM FUNCTIONS ////////////////////////////////////
@@ -451,7 +458,7 @@ var deathCountElement = $("#deathCount"); // Grabs the html element with the ID 
 // Function that updates the text on the screen that will display how much times player has died
 function updateDeathCountDisplay() {
   if (deathCountElement.length) {
-    deathCountElement.text("Deaths: " + deathCount); // 405 checks if deathCountElement exists if it does it updates the text inside the element to show the number of deaths.
+    deathCountElement.text("Deaths: " + deathCount); // 460 checks if deathCountElement exists if it does it updates the text inside the element to show the number of deaths.
   }  // Above coment is done through jQuery
 }
 
@@ -463,3 +470,14 @@ endGame = function() { // replacing the original endGame function, but still kee
   updateDeathCountDisplay();
   rbEndGame();
 };
+
+///////////////
+
+// Increase game speed each time apple is aten
+function increaseGameSpeed() {
+  // Decrease interval time by 0.5ms, but don't go below a minimum
+  snake.intervalTime = (snake.intervalTime - 1);
+  clearInterval(updateInterval);
+  updateInterval = setInterval(update, snake.intervalTime);
+}
+
