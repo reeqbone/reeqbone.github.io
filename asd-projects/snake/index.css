@@ -86,27 +86,3 @@ body {
   color: white;
   position: absolute;
 }
-
-#gameModeSelector {
-  position: absolute;
-  top: 18px;
-  left: 18px;
-  z-index: 20;
-  background: rgba(40,40,40,0.8);
-  color: #f9f5d7;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 1.1rem;
-}
-
-.bad-apple {
-  background-color: #282828;
-  border: 2px solid #ea6962;
-  box-shadow: 0 0 18px #ea6962, 0 2px 8px #ff6f91;
-  z-index: 1;
-  width: 20px;
-  height: 20px;
-  position: absolute;
-  border-radius: 5px;
-  transition: background 0.2s;
-}
