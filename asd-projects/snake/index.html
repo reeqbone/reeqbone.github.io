@@ -4,11 +4,19 @@
   <head>
     <title>Snake</title>
     <!--Link jQuery and CSS here-->
+      <link href="https://fonts.googleapis.com/css?family=Press+Start+2P&display=swap" rel="stylesheet">
       <link rel="stylesheet" type="text/css" href="index.css" />
       <script src="jquery.min.js"></script>
       <audio id="bg-music" src="ryuu.mp3" autoplay loop hidden></audio>
   </head>
   <body>
+    <div id="gameModeSelector">
+      <label for="gameMode">Game Mode:</label>
+      <select id="gameMode">
+        <option value="classic">Classic</option>
+        <option value="snavance">Snavance</option>
+      </select>
+    </div>
     <div id="board"></div>
     <h1 id="score">Score: 0</h1>
     <h1 id="highScore">High Score: 0</h1> 
@@ -17,4 +25,5 @@
   
   <!-- Link index.js here -->
   <script src="index.js"></script>
+
 </html>

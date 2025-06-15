@@ -189,22 +189,22 @@ function hasHitWall() {
 
   // debugger;
   if (snake.head.column < 0) {
-    endGame();
+    return true;
   }
 
   // Return true if the snake head has moved beyond the right wall
   if (snake.head.column >= COLUMNS) {
-    endGame();
+    return true;
   }
 
   // Return true if the snake head has moved above the top wall
   if (snake.head.row < 0) {
-    endGame();
+    return true;
   }
 
   // Return true if the snake head has moved below the bottom wall
   if (snake.head.row >= ROWS) {
-    endGame();
+    return true;
   }
 
   // If none of the above conditions are met, the snake has not hit a wall
@@ -297,7 +297,7 @@ function endGame() {
   // stop update function from running
   clearInterval(updateInterval);
 
-  // clear board of all elements
+  // clear board of all elements`
   board.empty();
 
   // update the highScoreElement to display the highScore

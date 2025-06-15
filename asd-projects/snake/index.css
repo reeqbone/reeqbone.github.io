@@ -1,9 +1,10 @@
-
 body {
   background-image: url('https://raw.githubusercontent.com/reeqbone/reeqbone.github.io/refs/heads/main/asd-projects/snake/greenroom.gif');
   background-repeat: no-repeat;
   background-size: cover;
   margin: 0;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  overflow: hidden;
 }
 
 #board {
@@ -16,10 +17,40 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   backdrop-filter: blur(5px);
+  border-radius: 18px;
+}
+
+#score, #highScore, #deathCount {
+  color: #f9f5d7;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #282828;
+  padding: 8px 18px;
+  background: rgba(40, 40, 40, 0.7);
+  border-radius: 8px;
+  margin: 8px;
+  display: inline-block;
 }
 
 #score, #highScore {
-  color: white;
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+#highScore {
+  left: unset;
+  right: 18px;
+  transform: none;
+}
+
+#deathCount {
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
 }
 
 .snake, .apple {
@@ -30,11 +61,13 @@ body {
   user-select: none;
   border-radius: 5px;
   transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 
 .snake {
   background-color: #a9b665;
   z-index: 2;
+  border: 2px solid #98971a
 }
 
 #snake-head {
@@ -45,10 +78,35 @@ body {
 .apple {
   background-color: #ff2e63;
   z-index: 1;
-  box-shadow: 0 0 10px #ff2e63 
+  box-shadow: 0 0 18px #ff2e63, 0 2px 8px #ff6f91;
+  border: 2px solid #ff6f91;
 }
 
 #deathCount {
   color: white;
   position: absolute;
+}
+
+#gameModeSelector {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 20;
+  background: rgba(40,40,40,0.8);
+  color: #f9f5d7;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+}
+
+.bad-apple {
+  background-color: #282828;
+  border: 2px solid #ea6962;
+  box-shadow: 0 0 18px #ea6962, 0 2px 8px #ff6f91;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  border-radius: 5px;
+  transition: background 0.2s;
 }
