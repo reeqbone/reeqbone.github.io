@@ -13,10 +13,27 @@ function runProgram(){
   
   // Game Item Objects
 
+  var walker = {
+    x: 0, // x position of the walker
+    y: 0, // y position of the walker   
+    speedY: 0, // vertical speed of the walker
+  };
+
+  const KEY = {
+    UP: 38, // up arrow key
+    DOWN: 40, // down arrow key
+    LEFT: 37, // left arrow key
+    RIGHT: 39, // right arrow key
+     W: 87, // W key
+     S: 83, // S key
+     A: 65, // A key
+     D: 68, // D key
+  }
 
   // one-time setup
   var interval = setInterval(newFrame, FRAMES_PER_SECOND_INTERVAL);   // execute newFrame every 0.0166 seconds (60 Frames per second)
-  $(document).on('eventType', handleEvent);                           // change 'eventType' to the type of event you want to handle
+  $(document).on('eventType', handleKeyDown);
+
 
   ////////////////////////////////////////////////////////////////////////////////
   ///////////////////////// CORE LOGIC ///////////////////////////////////////////
@@ -34,7 +51,7 @@ function runProgram(){
   /* 
   Called in response to events.
   */
-  function handleEvent(event) {
+  function handleKeyDown(event) {
 
   }
 
