@@ -40,7 +40,7 @@ function runProgram(){
   // $(document).on("keyup", handleKeyUp);
   $(document).on("keydown", handleKeyDown);
   $(document).on("keyup", handleKeyUp);
-  $("#walker").on("click", changeColor); // when the walker is clicked, change its color
+  $("#walker").on("click", rbColor); // when the walker is clicked, change its color
 
   // $(document).on("click", handleClick);
 
@@ -149,19 +149,10 @@ function runProgram(){
   }
 
   if (hitWall === true) {
-    changeColor();
+    rbColor();
   }
 }
 
-
-
-// Rewrote some the var random color code from project instructions to fit a different use for me
-function changeColor() {
-  // Pick a random color from a simple list
-  const colors = ["#ea6962", "#7daea3", "#a9b665", "#FADA5E", "#9955bb", ":#e3a84e"];
-  let randomColors = colors.length  * Math.random() | 0; // get a random index from 0 to colors.length - 1
-  $("#walker").css("background-color", colors[randomColors]);
-}
 
   function endGame() {
     // stop the interval timer
@@ -171,6 +162,57 @@ function changeColor() {
     $(document).off();
   }
 
-  
+
+
+/*
+  _____                 _                      
+ |  __ \               | |                     
+ | |__) |___  ___  __ _| |__   ___  _ __   ___ 
+ |  _  // _ \/ _ \/ _` | '_ \ / _ \| '_ \ / _ \
+ | | \ \  __/  __/ (_| | |_) | (_) | | | |  __/
+ |_|  \_\___|\___|\__, |_.__/ \___/|_| |_|\___|
+                     | |                       
+                     |_|   () Extras  ()
+*/
+
+// Rewrote some the var random color code from project instructions to fit a different use for me
+function rbColor() {
+  // Pick a random color from a simple list
+  const colors = ["#ea6962", "#7daea3", "#a9b665", "#FADA5E", "#9955bb", ":#e3a84e"];
+  let rbRandoColors = colors.length  * Math.random() | 0; // get a random index from 0 to colors.length - 1
+  $("#walker").css("background-color", colors[rbRandoColors]);
+}
+
+
+  // Create a second walker that follows the first walker
+  let rbfollower = {
+    x: walker.x - 40,
+    y: walker.y - 40,
+    width: $("#walker").width(),
+    height: $("#walker").height(),
+    color: "#e18e96"
+  };
+
+  // Add follower element to the board
+
+  // Update newFrame to move and redraw the follower
+  const rbNewFrame = newFrame;
+  function newFrame() {
+    // Move follower towards previous position of walker
+    const rbfollowSpeed = 0.05;
+    rbfollower.x += (walker.x - rbfollower.x) * rbfollowSpeed;
+    rbfollower.y += (walker.y - rbfollower.y) * rbfollowSpeed;
+
+    // Redraw follower
+    $("#follower").css({
+      left: rbfollower.x + "px",
+      top: rbfollower.y + "px"
+    });
+
+    // Continue normal game logic
+    redrawGameItem();
+    repositionGameItem();
+    wallCollision();
+  }
   
 }
