@@ -1,5 +1,7 @@
+/* Just copied a bunch of code from snake.css */
+
 body {
-  background-image: url('https://raw.githubusercontent.com/reeqbone/reeqbone.github.io/refs/heads/main/asd-projects/snake/greenroom.gif');
+  background-image: url('https://github.com/reeqbone/reeqbone.github.io/blob/main/tokyo.gif?raw=true');
   background-repeat: no-repeat;
   background-size: cover;
   margin: 0;
@@ -11,13 +13,14 @@ body {
   width: 440px;
   height: 440px;
   border: 1px solid white;
-  background-color: black; box-shadow: 0 0 50px #ea6962;
+  background-color: rgba(0, 0, 0, 0.7); /* More transparent */
+  box-shadow: 0 0 50px 10px #458588, 0 0 30px 30px #e18e96;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   backdrop-filter: blur(5px);
-  border-radius: 18px
+  border-radius: 18px;
 }
 
 #walker {
@@ -25,7 +28,7 @@ body {
   width: 50px;
   height: 50px;
   position: absolute;
-  border-radius: 50%;
+  border-radius: 25%;
 /*   left: 100px; */  /* Uncomment if you want to set a "starting" position */
 /*   top: 100px;  */  /* Uncomment if you want to set a "starting" position */
 }
