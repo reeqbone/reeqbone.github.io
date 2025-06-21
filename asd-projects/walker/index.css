@@ -1,18 +1,27 @@
-
 body {
-  background-color: darkgreen;
+  background-image: url('https://raw.githubusercontent.com/reeqbone/reeqbone.github.io/refs/heads/main/asd-projects/snake/greenroom.gif');
+  background-repeat: no-repeat;
+  background-size: cover;
+  margin: 0;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  overflow: hidden;
 }
 
 #board {
   width: 440px;
   height: 440px;
   border: 1px solid white;
-  background-color: black;
-  position: relative;
+  background-color: black; box-shadow: 0 0 50px #ea6962;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(5px);
+  border-radius: 18px
 }
 
 #walker {
-  background-color: teal;
+  background-color: #e18e96;
   width: 50px;
   height: 50px;
   position: absolute;
