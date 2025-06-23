@@ -178,14 +178,14 @@ function runProgram(){
 // Rewrote some the var random color code from project instructions to fit a different use for me
 function rbColor() {
   // Pick a random color from a simple list
-  const colors = ["#ea6962", "#7daea3", "#a9b665", "#FADA5E", "#9955bb", ":#e3a84e"];
+  const colors = ["#ea6962", "#7daea3", "#a9b665", "#FADA5E", "#9955bb", ":#e3a84e", "#9E4244", "#7daea3", "#458588", "#cc241d", "#98971a", "#d65d0e", "#b16286", "#d79921", "#e18e96", "d1bea8", "#f0fff0"];
   let rbRandoColors = colors.length  * Math.random() | 0; // get a random index from 0 to colors.length - 1
   $("#walker").css("background-color", colors[rbRandoColors]);
 }
 
 
   // Create a second walker that follows the first walker
-  let rbfollower = {
+  let rbFollower = {
     x: walker.x - 40,
     y: walker.y - 40,
     width: $("#walker").width(),
@@ -199,14 +199,14 @@ function rbColor() {
   const rbNewFrame = newFrame;
   function newFrame() {
     // Move follower towards previous position of walker
-    const rbfollowSpeed = 0.05;
-    rbfollower.x += (walker.x - rbfollower.x) * rbfollowSpeed;
-    rbfollower.y += (walker.y - rbfollower.y) * rbfollowSpeed;
+    const rbFollowSpeed = 0.05;
+    rbFollower.x += (walker.x - rbfollower.x) * rbFollowSpeed;
+    rbFollower.y += (walker.y - rbfollower.y) * rbfollowSpeed;
 
     // Redraw follower
     $("#follower").css({
-      left: rbfollower.x + "px",
-      top: rbfollower.y + "px"
+      left: rbFollower.x + "px",
+      top: rbFollower.y + "px"
     });
 
     // Continue normal game logic
