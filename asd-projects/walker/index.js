@@ -200,8 +200,8 @@ function rbColor() {
   function newFrame() {
     // Move follower towards previous position of walker
     const rbFollowSpeed = 0.05;
-    rbFollower.x += (walker.x - rbfollower.x) * rbFollowSpeed;
-    rbFollower.y += (walker.y - rbfollower.y) * rbfollowSpeed;
+    rbFollower.x += (walker.x - rbFollower.x) * rbFollowSpeed;
+    rbFollower.y += (walker.y - rbFollower.y) * rbFollowSpeed;
 
     // Redraw follower
     $("#follower").css({
