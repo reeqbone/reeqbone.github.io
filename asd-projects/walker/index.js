@@ -178,9 +178,12 @@ function runProgram(){
 // Rewrote some the var random color code from project instructions to fit a different use for me
 function rbColor() {
   // Pick a random color from a simple list
-  const colors = ["#ea6962", "#7daea3", "#a9b665", "#FADA5E", "#9955bb", ":#e3a84e", "#9E4244", "#7daea3", "#458588", "#cc241d", "#98971a", "#d65d0e", "#b16286", "#d79921", "#e18e96", "d1bea8", "#f0fff0"];
+  const colors = ["#ea6962", "#7daea3", "#a9b665", "#FADA5E", "#9955bb", ":#e3a84e"];
+  const dkColors = ["#9E4244", "#7daea3", "#458588", "#cc241d", "#98971a", "#d65d0e", "#b16286", "#d79921", "#e18e96", "d1bea8", "#f0fff0"]
   let rbRandoColors = colors.length  * Math.random() | 0; // get a random index from 0 to colors.length - 1
+  let rbDkColors = dkColors.length  * Math.random() | 0; // get a random index from 0 to colors.length - 1
   $("#walker").css("background-color", colors[rbRandoColors]);
+  $("#follower").css("background-color", dkColors[rbDkColors]);
 }
 
 
