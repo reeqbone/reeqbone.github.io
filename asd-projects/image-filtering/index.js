@@ -4,8 +4,7 @@ $(document).ready(function () {
   render($("#display"), image);
   $("#apply").on("click", applyAndRender);
   $("#reset").on("click", resetAndRender);
-  applyFilter()
-  render($("#display"), image);
+ // applyFilter()
 });
 
 /////////////////////////////////////////////////////////
@@ -28,6 +27,8 @@ function applyAndRender() {
   applyFilterNoBackground(decreaseBlue);
   applyFilter(increaseGreenByBlue);
   applyFilterNoBackground(reddify);
+  // applyFilter(decreaseBlue)
+
 
   // do not change the below line of code
   render($("#display"), image);
@@ -94,18 +95,3 @@ function increaseGreenByBlue(rgbArray) {
   rgbArray[GREEN] = keepInBounds(rgbArray[GREEN] + rgbArray[BLUE]);
 }
 // CHALLENGE code goes below here
-
-// Example: grayscale filter (extra challenge)
-function grayscale(pixelArray) {
-  let avg = Math.round((pixelArray[RED] + pixelArray[GREEN] + pixelArray[BLUE]) / 3);
-  pixelArray[RED] = avg;
-  pixelArray[GREEN] = avg;
-  pixelArray[BLUE] = avg;
-}
-
-// Example: invert filter (extra challenge)
-function invert(pixelArray) {
-  pixelArray[RED] = 255 - pixelArray[RED];
-  pixelArray[GREEN] = 255 - pixelArray[GREEN];
-  pixelArray[BLUE] = 255 - pixelArray[BLUE];
-}
