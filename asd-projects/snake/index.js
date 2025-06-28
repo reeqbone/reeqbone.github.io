@@ -491,10 +491,12 @@ function increaseGameSpeed() {
     alert("You have won the game!") // Game is running at unreasonable speed, so the game is over
     endGame();
   }
+  /*
   else if (score >= 27) { // It takes about 26 apples to win the game (winning game is reaching 35mms speed)
     alert("Who the HELL ate all MY APPLES!?!"); //Game is running at unreasonable speed, so the game is over
     endGame();
   }
+    */
   else if (snake.intervalTime >= 33) { 
     nun; // do nothing, the game is stil running at a reasonable speed
   }
