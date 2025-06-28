@@ -12,15 +12,53 @@
 		.box {
 			width: 70px;
 			height: 70px;
-			background-image: linear-gradient(#C5FFFE, #9955bb, #FFC1CC );
-			font-size: 300%;
+			background: linear-gradient(135deg, #7fd1d0 0%, #e5738a 60%, #6a2c70 100%);
+			border-radius: 50% 50% 60% 60% / 60% 60% 80% 80%;
+			box-shadow: 0 0 24px 8px rgba(255,192,203,0.6), 0 0 32px 12px #fff3, 0 1px 0 #fff inset;
+			font-size: 2.2em;
 			text-align: center;
 			user-select: none;
-			display: block;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			position: absolute;
 			top: 100px;
-			left: 300px;  /* <--- Change me! */
+			left: 300px;
+			transition: background 0.3s, box-shadow 0.3s, transform 0.15s;
+			animation: kawaii-bounce 1.2s infinite alternate cubic-bezier(.68,-0.55,.27,1.55);
+			border: 3px solid #fff6fa;
+			overflow: visible;
 		}
+		.box::before, .box::after {
+			content: '';
+			position: absolute;
+			border-radius: 50%;
+			background: #fff;
+			opacity: 0.7;
+			pointer-events: none;
+		}
+		.box::before {
+			width: 18px;
+			height: 18px;
+			left: 16px;
+			top: 18px;
+			box-shadow: 30px 0 0 0 #fff;
+		}
+		.box::after {
+			width: 8px;
+			height: 8px;
+			left: 26px;
+			top: 36px;
+			box-shadow: 18px 0 0 0 #fff;
+		}
+
+		@keyframes kawaii-bounce {
+			0%   { transform: scale(1) translateY(0);}
+			60%  { transform: scale(1.08,0.95) translateY(-8px);}
+			80%  { transform: scale(0.97,1.05) translateY(2px);}
+			100% { transform: scale(1) translateY(0);}
+		}
+		
 		.board{
 			height: 100vh;
 		}
@@ -37,110 +75,118 @@
 			'use strict'
 			/* global jQuery */
 
-			//////////////////////////////////////////////////////////////////
-			/////////////////// SETUP DO NOT DELETE //////////////////////////
-			//////////////////////////////////////////////////////////////////
-			
-			var box = jQuery('.box');	// reference to the HTML .box element
-			var board = jQuery('.board');	// reference to the HTML .board element
-			var boardWidth = board.width();	// the maximum X-Coordinate of the screen
+			var box = jQuery('.box');
+			var board = jQuery('.board');
+			var boardWidth = board.width();
+			var boardHeight = jQuery(window).height();
 
-			// Every 50 milliseconds, call the update Function (see below)
-			setInterval(update, 50);
-			
-			// Every time the box is clicked, call the handleBoxClick Function (see below)
-			box.on('click', handleBoxClick);
+			var positionX = Math.random() * (boardWidth - 70);
+			var positionY = Math.random() * (boardHeight - 70);
+			var speedX = 9;
+			var speedY = 9;
+			var points = 0;
+			var misses = 0;
+			var interval = setInterval(update, 50);
 
-			// moves the Box to a new position on the screen along the X-Axis
+			// Display 3 and misses
+			var info = $('<div style="position:fixed;top:10px;left:10px;font-size:1.5em;color:#fff;text-shadow:0 0 5px #000;"></div>').appendTo('body');
+			updateInfo();
+
+			// Make the hit box larger for the box
+			// We'll overlay a transparent div ("hitbox") that's bigger than the box and moves with it
+
+			// Create the hitbox element
+			var hitbox = $('<div></div>').css({
+			    position: 'absolute',
+			    width: '110px',    // larger than box (70px)
+			    height: '110px',
+			    left: positionX - 20,
+			    top: positionY - 20,
+			    cursor: 'pointer',
+			    background: 'rgba(0,0,0,0)', // fully transparent
+			    zIndex: 10
+			}).appendTo('body');
+
+			// Attach click handler to hitbox (not box)
+			hitbox.on('click', handleBoxClick);
+			board.on('click', function(e){
+				// Only count as a miss if not clicking the box
+				if (!$(e.target).hasClass('box')) {
+					misses++;
+					updateInfo();
+					if (misses >= 10) endGame();
+				}
+			});
+
+			// Update moveBoxTo to move both box and hitbox
 			function moveBoxTo(newPositionX, newPositionY) {
 				box.css("left", newPositionX);
 				box.css('top', newPositionY);
+				hitbox.css("left", newPositionX - 20);
+				hitbox.css("top", newPositionY - 20);
 			}
 
-			// changes the text displayed on the Box
 			function changeBoxText(newText) {
 				box.text(newText);
 			}
 
-			//////////////////////////////////////////////////////////////////
-			/////////////////// YOUR CODE BELOW HERE /////////////////////////
-			//////////////////////////////////////////////////////////////////
-			
-			// TODO 2 - Variable declarations 
-			
-			var positionX = 0;
-			var points = 0;
-			var speedX = 9;
-			var positionY = 0;
-			var speedY = 9;
-			var boardHeight = jQuery(window).height(); 
-			var randX = Math.random() * boardWidth
-			var randY = Math.random() * boardHeight
-						
-			/* var boardHeight = jQuery(window).height(); 
-			This Function will be called 20 times/second. Each time it is called,
-			it should move the Box to a new location. If the box drifts off the screen
-			turn it around! 
-			*/
+			function updateInfo() {
+				info.html("Score: " + points + " &nbsp; Misses: " + misses + "/10");
+			}
+
+			function getRandomColor() {
+				var r = Math.floor(Math.random() * 256);
+				var g = Math.floor(Math.random() * 256);
+				var b = Math.floor(Math.random() * 256);
+				return "rgb(" + r + "," + g + "," + b + ")";
+			}
+
 			function update() {
-				/* Your Code to Increase positionX by 10 HERE */
-				positionX = positionX + speedX;
-				positionY = positionY + speedY;
+				positionX += speedX;
+				positionY += speedY;
 
 				moveBoxTo(positionX, positionY);
 
-				if (positionX > (boardWidth - 50)) {
-					speedX = -speedX
-				}
+				// Bounce off right/left
+				if (positionX > (boardWidth - 70)) speedX = -Math.abs(speedX);
+				if (positionX < 0) speedX = Math.abs(speedX);
 
-				if (positionX < 0) {
-					speedX = -speedX
-				}
-				
-				if (positionY > (boardHeight - 50)) {
-					speedY = -speedY
-				}
+				// Bounce off bottom/top
+				if (positionY > (boardHeight - 70)) speedY = -Math.abs(speedY);
+				if (positionY < 0) speedY = Math.abs(speedY);
+			}
 
-				if (positionY < 0) {
-					speedY = -speedY
-				}
-				
-
-				
-
-			};
-
-			/* 
-			This Function will be called each time the box is clicked. Each time it is called,
-			it should increase the points total, increase the speed, and move the box to
-			the left side of the screen.
-			*/
-			function handleBoxClick() {
-				positionX = 0;
-				points = points + 1
+			function handleBoxClick(e) {
+				e.stopPropagation(); // Prevent board click event
+				points++;
 				changeBoxText(points);
-				
-				if (speedX => 0){
-					speedX += 1.5;
-				}
-				else {
-					speedX -= 1.5;
-				}
-				if (speedY > 0){
-					speedY += 1.5;
-				}
-				else {
-					speedY -= 1.5;
-				}
 
+				// Speed up
+				if (speedX > 0) speedX += 1.5; else speedX -= 1.5;
+				if (speedY > 0) speedY += 1.5; else speedY -= 1.5;
 
+				// Randomize color
+				box.css('background-color', getRandomColor());
 
+				// Randomize position
+				positionX = Math.random() * (boardWidth - 70);
+				positionY = Math.random() * (boardHeight - 70);
+				moveBoxTo(positionX, positionY);
 
+				updateInfo();
+			}
 
-				
-
-
-			};
+			// Update endGame to restart after 3 seconds
+			function endGame() {
+				clearInterval(interval);
+				hitbox.off('click');
+				board.off('click');
+				info.html("Game Over! Final Score: " + points + "<br>Restarting in 3 seconds...");
+				box.text("😎");
+				setTimeout(function() {
+					location.reload();
+				}, 3000);
+			}
 		})();
 	</script>
 </body>
