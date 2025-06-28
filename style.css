@@ -25,14 +25,21 @@ lightblack  = ${xrdb:color17:#282828}
 
 
 body {
-  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-  background-image: url("https://github.com/DoomaticSudds/doomaticsudds.github.io/blob/main/rain.gif?raw=true");
-  background-repeat: no-repeat;
-  background-size: cover;
-  min-height: 100vh;
-  backdrop-filter: blur(2px);
-  transition: background 0.7s;
-  backdrop-filter: blur(6px);
+    font-family: 'Segoe UI', 'Arial', sans-serif;  background-image: url("https://github.com/reeqbone/reeqbone.github.io/blob/main/outsiderain.gif?raw=true");
+    min-height: 100vh;
+    backdrop-filter: blur(2px);
+    transition: background 0.7s;
+    backdrop-filter: blur(6px);
+    margin: 0;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    min-width: 100vw;
+    height: 100vh;
+    width: 100vw;
 }
 
 #all-contents {
