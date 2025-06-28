@@ -1,10 +1,15 @@
 body {
-  background-image: url('https://raw.githubusercontent.com/reeqbone/reeqbone.github.io/refs/heads/main/asd-projects/snake/greenroom.gif');
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-image: url('https://i.redd.it/axt0gdvzl0a91.gif');
   margin: 0;
   font-family: 'Segoe UI', 'Arial', sans-serif;
   overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  min-width: 100vw;
+  height: 100vh;
+  width: 100vw;
 }
 
 #board {
