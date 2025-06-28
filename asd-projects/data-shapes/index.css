@@ -19,6 +19,7 @@ body {
   border-radius: 18px;
   box-shadow: 0 0 32px #7c4dff88, 0 0 0 8px #fff1 inset;
   background: rgba(44, 19, 72, 0.85);
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 #info-bar {
