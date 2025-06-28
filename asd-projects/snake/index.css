@@ -91,3 +91,20 @@ body {
   color: white;
   position: absolute;
 }
+
+  .chaser-snake {
+    background-color: #5e81ac;
+    border: 2px solid #81a1c1;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    border-radius: 5px;
+    z-index: 3;
+    box-shadow: 0 0 18px #81a1c1, 0 2px 8px #5e81ac;
+    transition: background 0.2s;
+  }
+  
+  #chaser-head {
+    background-color: #b48ead;
+    box-shadow: 0 0 25px #b48ead;
+  }

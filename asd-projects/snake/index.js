@@ -41,6 +41,9 @@ var updateInterval;
 // variable to keep track of the key (keycode) last pressed by the user
 var activeKey;
 
+// Add these variables near the top, after your variable declarations:
+var isPaused = false;
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// GAME SETUP //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +83,8 @@ function init() {
  * collisions with the walls.
  */
 function update() {
+  if (isPaused) return;
+
   // TODO 5b: Fill in the update function's code block
   moveSnake();
 
@@ -305,11 +310,10 @@ function endGame() {
   scoreElement.text("Score: 0");
   score = 0;
 
-  // restart the game after 500 ms
-  setTimeout(init, 500);
+  // restart the game after 1000 ms
+  setTimeout(init, 1000);
 
   console.log("endGame"); // this is for later, my function will check logs to see if endGame is there, if it is, death count is updated by 1
-  alert("Press Enter or 'Ok' to restart the game!"); 
   updateDeathCountDisplay()// alert to notify the user that the game has ended and will restart
 
 }
@@ -379,8 +383,12 @@ function makeSnakeSquare(row, column) {
     KEY.DOWN = 40
 */
 function handleKeyDown(event) {
-  // TODO 6a: make the handleKeyDown function register which key is pressed
   activeKey = event.which;
+  // Toggle pause with "P" (key code 80)
+  if (activeKey === 80) {
+    togglePause();
+    return; // Don't process movement if pausing
+  }
   console.log(activeKey);
 }
     
@@ -401,14 +409,15 @@ function repositionSquare(square) {
 
 /* Returns a (row,column) Object that is not occupied by another game component
  */
+
 function getRandomAvailablePosition() {
   var spaceIsAvailable;
   var randomPosition = {};
 
   /* Generate random positions until one is found that doesn't overlap with the snake */
   while (!spaceIsAvailable) {
-    randomPosition.column = Math.floor(Math.random() * BCOLUMNS);
-    randomPosition.row = Math.floor(Math.random() * BROWS);
+    randomPosition.column = Math.floor(Math.random() * COLUMNS);
+    randomPosition.row = Math.floor(Math.random() * ROWS);
     spaceIsAvailable = true;
 
     /*
@@ -416,8 +425,13 @@ function getRandomAvailablePosition() {
     not occupied by a snakeSquare in the snake's body. If it is then set 
     spaceIsAvailable to false so that a new position is generated.
     */
+   for(var i = 0; i < snake.body.length; i++) {
+    if (snake.body[i].row === randomPosition.row && snake.body[i] === randomPosition.column) {
+      spaceIsAvailable = false;
+    }
+   }
   }
-  
+
   return randomPosition;
 }
 
@@ -501,3 +515,31 @@ function increaseGameSpeed() {
     nun; // do nothing, the game is stil running at a reasonable speed
   }
 }
+
+// Add this function anywhere in your file:
+function togglePause() {
+  isPaused = !isPaused;
+  if (isPaused) {
+    clearInterval(updateInterval);
+    if (!$("#pause-message").length) {
+      $("<div id='pause-message'>Paused</div>")
+        .css({
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          color: "#fff",
+          fontSize: "2em",
+          background: "rgba(0,0,0,0.7)",
+          padding: "10px 20px",
+          borderRadius: "10px",
+          zIndex: 1000
+        })
+        .appendTo("body");
+    }
+  } else {
+    $("#pause-message").remove();
+    updateInterval = setInterval(update, snake.intervalTime);
+  }
+}
+
