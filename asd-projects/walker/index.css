@@ -1,13 +1,19 @@
 /* Just copied a bunch of code from snake.css */
 
 body {
-  background-image: url('https://github.com/reeqbone/reeqbone.github.io/blob/main/websiteData/tokyo.gif?raw=true');
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-image: url('https://github.com/reeqbone/reeqbone.github.io/blob/main/websiteData/starynight.gif?raw=true');
   margin: 0;
   font-family: 'Segoe UI', 'Arial', sans-serif;
   overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  min-width: 100vw;
+  height: 100vh;
+  width: 100vw;
 }
+
 
 #board {
   width: 440px;
