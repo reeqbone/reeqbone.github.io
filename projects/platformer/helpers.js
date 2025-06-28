@@ -32,6 +32,25 @@ function main() {
   animate(); //this changes halle's picture to the next frame so it looks animated.
   // debug()                   //debugging values. Comment this out when not debugging.
   drawRobot(); //this actually displays the image of the robot.
+
+  if (!allCollected && collectables.every((c) => c.collected)) {
+    allCollected = true;
+    clearInterval(timerInterval);
+    let msg =
+      "You collected everything in " +
+      (gameTimer / 1000).toFixed(2) +
+      " seconds!";
+    if (!bestTime || gameTimer < bestTime) {
+      bestTime = gameTimer;
+      localStorage.setItem("platformerBestTime", bestTime);
+      msg += "\nNEW BEST TIME!";
+    } else {
+      msg += "\nBest: " + (bestTime / 1000).toFixed(2) + "s";
+    }
+    setTimeout(() => {
+      alert(msg);
+    }, 100);
+  }
 }
 
 function getJSON(url, callback) {
@@ -199,6 +218,24 @@ function animate() {
 }
 
 function drawRobot() {
+  if (player.deadAndDeathAnimationDone) return;
+  // Draw shadow
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.ellipse(
+    player.x + player.width / 2,
+    player.y + player.height - 10,
+    player.width / 2,
+    10,
+    0,
+    0,
+    2 * Math.PI
+  );
+  ctx.fillStyle = "#22223b";
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.restore();
   //ctx.drawImage(imageVaribale, sourceY, SourceX, sourceWidth, sourceHeight, canvasX, canvasY, finalWidth, finalHeight)
   //https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
   //you only need the extra four source arguments if you want to display just a portion of the picture; if you want to show the whole picture you can just do drawImage(imageVar, canvasX, canvasY, width, height)
@@ -411,7 +448,9 @@ function playerFrictionAndGravity() {
 
 function drawPlatforms() {
   for (var i = 0; i < platforms.length; i++) {
-    ctx.fillStyle = "grey";
+    // Stylish gradient effect
+    let hue = (i * 40) % 360;
+    ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
     ctx.fillRect(
       platforms[i].x,
       platforms[i].y,
@@ -516,7 +555,10 @@ function collectablesCollide() {
       collectables[i].y < player.y + hitBoxHeight &&
       collectables[i].y + collectableHeight > player.y
     ) {
-      collectables[i].collected = true;
+      if (!collectables[i].collected) {
+        collectables[i].collected = true;
+        document.getElementById("collectSound").play();
+      }
     }
   }
 }
@@ -717,4 +759,34 @@ function handleKeyUp(e) {
 
 function loadJson() {
   getJSON("halle.json", JsonFunction); //runs this before the setup because of timing things
+}
+
+// At the end of setup()
+gameTimer = 0;
+allCollected = false;
+if (timerInterval) clearInterval(timerInterval);
+timerInterval = setInterval(() => {
+  gameTimer += 16;
+}, 16);
+
+function drawTimer() {
+  ctx.save();
+  ctx.font = "bold 32px 'Press Start 2P', monospace";
+  ctx.fillStyle = "#ff2e63";
+  ctx.textAlign = "right";
+  ctx.fillText(
+    "Time: " + (gameTimer / 1000).toFixed(2) + "s",
+    canvas.width - 40,
+    50
+  );
+  if (bestTime) {
+    ctx.font = "bold 20px 'Press Start 2P', monospace";
+    ctx.fillStyle = "#f9f5d7";
+    ctx.fillText(
+      "Best: " + (bestTime / 1000).toFixed(2) + "s",
+      canvas.width - 40,
+      80
+    );
+  }
+  ctx.restore();
 }
