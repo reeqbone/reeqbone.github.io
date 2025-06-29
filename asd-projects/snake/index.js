@@ -44,6 +44,8 @@ var activeKey;
 // Pause the Game
 var isPaused = false;
 
+var APPLE_MARGIN = 1; // Apple cannot appear within 2 squares of any edge
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// GAME SETUP //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -404,22 +406,19 @@ function getRandomAvailablePosition() {
   var spaceIsAvailable;
   var randomPosition = {};
 
-  /* Generate random positions until one is found that doesn't overlap with the snake */
+  // Generate random positions until one is found that doesn't overlap with the snake
   while (!spaceIsAvailable) {
-    randomPosition.column = Math.floor(Math.random() * COLUMNS);
-    randomPosition.row = Math.floor(Math.random() * ROWS);
+    // Use APPLE_MARGIN to keep apples away from the edges
+    randomPosition.column = Math.floor(Math.random() * (COLUMNS - 2 * APPLE_MARGIN)) + APPLE_MARGIN;
+    randomPosition.row = Math.floor(Math.random() * (ROWS - 2 * APPLE_MARGIN)) + APPLE_MARGIN;
     spaceIsAvailable = true;
 
-    /*
-    TODO 13: After generating the random position determine if that position is
-    not occupied by a snakeSquare in the snake's body. If it is then set 
-    spaceIsAvailable to false so that a new position is generated.
-    */
-   for(var i = 0; i < snake.body.length; i++) {
-    if (snake.body[i].row === randomPosition.row && snake.body[i] === randomPosition.column) {
-      spaceIsAvailable = false;
+    // Check if position is occupied by the snake
+    for (var i = 0; i < snake.body.length; i++) {
+      if (snake.body[i].row === randomPosition.row && snake.body[i].column === randomPosition.column) {
+        spaceIsAvailable = false;
+      }
     }
-   }
   }
 
   return randomPosition;

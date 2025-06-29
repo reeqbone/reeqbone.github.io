@@ -9,15 +9,16 @@ $(document).ready(function () {
   $("#reset").on("click", resetAndRender);
 
   // Add filter mode selector if not already present
-  if ($("#filter-mode").length === 0) {
-    $("<select id='filter-mode'></select>")
-      .css({ margin: "10px", fontSize: "1.1em" })
-      .append("<option value='classic'>Classic</option>")
-      .append("<option value='vivid'>Vivid</option>")
-      .append("<option value='cool'>Cool</option>")
-      .append("<option value='invert'>Invert</option>")
-      .append("<option value='party'>Party</option>")
-      .insertBefore("#apply");
+  if (!$("#filter-mode").length) {
+    $(`
+      <select id="filter-mode" style="margin:10px;font-size:1.1em">
+        <option value="classic">Classic</option>
+        <option value="vivid">Vivid</option>
+        <option value="cool">Cool</option>
+        <option value="invert">Invert</option>
+        <option value="party">Party</option>
+      </select>
+    `).insertBefore("#apply");
   }
 });
 
