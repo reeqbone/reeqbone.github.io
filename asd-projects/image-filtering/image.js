@@ -1,3 +1,6 @@
+
+
+
 // set the square size (must match the CSS)
 const SQUARE_SIZE = 20;
 

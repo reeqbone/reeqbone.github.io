@@ -1,28 +1,101 @@
+/* --- Layout and Background --- */
+body {
+  background: #282828;
+  font-family: 'Fira Mono', monospace;
+  color: #ebdbb2;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+#display {
+  position: relative;
+  margin: 32px auto 0 auto;
+  width: 280px;
+  height: 340px;
+  background: #3c3836;
+  border-radius: 10px;
+  border: 2px solid #504945;
+  overflow: hidden;
+}
+
+/* --- Image Squares --- */
 .square {
   width: 20px;
   height: 20px;
   position: absolute;
+  border-radius: 2px;
 }
 
-body > div {
-  position: relative;
-}
-
+/* --- Button Box --- */
 #button-box {
-  position: relative;
-  top: 350px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 24px 0;
 }
 
-button {
+/* --- Buttons and Dropdown --- */
+button, select {
   width: 120px;
-  padding: 5px;
-  margin-left: 12px;
+  padding: 7px 0;
+  margin: 0 4px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  font-family: inherit;
+  font-weight: bold;
+  color: #aa000000;
+  background: #7daea3;
 }
 
 #apply {
-  background: green;
+  background: #a9b665;
+  color: #282828;
 }
 
 #reset {
-  background: red;
+  background: #e18e96;
+  color: #fff;
 }
+
+#filter-mode {
+  background: #d1bea8;
+  color: #9E4244;
+  border: 1px solid #ea6962;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-right: 6px;
+  font-size: 1em;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  #display {
+    width: 98vw;
+    height: 60vw;
+    min-width: 140px;
+    min-height: 180px;
+    max-width: 98vw;
+    max-height: 60vw;
+  }
+  .square {
+    width: 4vw;
+    height: 4vw;
+    min-width: 12px;
+    min-height: 12px;
+  }
+  #button-box {
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0 18px 0;
+  }
+  button, select {
+    width: 90vw;
+    font-size: 1em;
+  }
+}
+
