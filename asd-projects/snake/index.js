@@ -41,7 +41,7 @@ var updateInterval;
 // variable to keep track of the key (keycode) last pressed by the user
 var activeKey;
 
-// Add these variables near the top, after your variable declarations:
+// Pause the Game
 var isPaused = false;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ function checkForNewDirection(event) {
 
   // FILL IN THE REST
 
-  console.log(snake.head.direction);     // uncomment me!
+ // console.log(snake.head.direction);     // uncomment me!
 }
 
 function moveSnake() {
@@ -371,17 +371,7 @@ function makeSnakeSquare(row, column) {
 }
 
 
-/* 
-  event.which returns the keycode of the key that is pressed when the
-  keydown event occurs
-  
-  The KEY Object creates a map for the Arrow Keys to their keycode:
 
-    KEY.LEFT = 37
-    KEY.UP = 38
-    KEY.RIGHT = 39
-    KEY.DOWN = 40
-*/
 function handleKeyDown(event) {
   activeKey = event.which;
   // Toggle pause with "P" (key code 80)
@@ -389,7 +379,7 @@ function handleKeyDown(event) {
     togglePause();
     return; // Don't process movement if pausing
   }
-  console.log(activeKey);
+ // console.log(activeKey);
 }
     
 /* Given a gameSquare (which may be a snakeSquare or the apple), position
@@ -512,7 +502,7 @@ function increaseGameSpeed() {
   }
     */
   else if (snake.intervalTime >= 33) { 
-    nun; // do nothing, the game is stil running at a reasonable speed
+    // do nothing, the game is still running at a reasonable speed
   }
 }
 
