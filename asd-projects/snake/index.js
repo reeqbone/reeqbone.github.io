@@ -77,8 +77,11 @@ function init() {
   // TODO 5a: Initialize the interval
   // start update interval
   // Set initial interval time
+  
   snake.intervalTime = 115; // Anytime an apple is eaten, the game increases in speed // Functional,ity is found in Extras section
-  updateInterval = setInterval(update, snake.intervalTime); //16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
+  updateInterval = setInterval(update, snake.intervalTime);//16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
+  requestAnimationFrame(render);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,10 +135,18 @@ function updateChaserSnake() {
   chaserSnake.moveCounter = 0;
 
   // Occasionally change AI strategy for unpredictability (more often)
-  if (Math.random() < 0.15) {
+  // Switch strategy less often (5%) and prioritize "hunt" when far away
+if (Math.random() < 0.05) {
+  var distanceToPlayer = Math.abs(chaserSnake.head.row - snake.head.row) + Math.abs(chaserSnake.head.column - snake.head.column);
+
+  if (distanceToPlayer > 12) {
+    chaserSnake.strategy = "hunt"; // Just chase when player is far
+  } else {
     var strategies = ["hunt", "intercept", "ambush"];
     chaserSnake.strategy = strategies[Math.floor(Math.random() * strategies.length)];
   }
+}
+
 
   // Decide next move based on current strategy
   var nextMove = calculateChaserMove();
@@ -170,6 +181,16 @@ function calculateChaserMove() {
   if (possibleMoves.length === 0) {
     // If no valid moves, try to find any available space (emergency)
     return findEmergencyMove();
+
+    // If it didn’t actually move (got stuck), force emergency move
+  if (chaserSnake.head.row === chaserSnake.body[1].row && chaserSnake.head.column === chaserSnake.body[1].column) {
+    console.log("Chaser stuck! Forcing emergency move.");
+        var emergencyMove = findEmergencyMove();
+          if (emergencyMove) {
+    moveChaserSnake(emergencyMove);
+  }
+}
+
   }
 
   var bestMove;
@@ -223,7 +244,8 @@ function huntPlayer(moves, playerRow, playerCol) {
     // Manhattan distance
     var distance = Math.abs(move.row - playerRow) + Math.abs(move.column - playerCol);
     // Prefer moves that are not diagonal for more direct pursuit
-    if (distance < minDistance || (distance === minDistance && (move.direction === "up" || move.direction === "down" || move.direction === "left" || move.direction === "right"))) {
+  if (distance < minDistance || 
+    (distance === minDistance && !move.direction.includes("-"))) {
       minDistance = distance;
       bestMove = move;
     }
@@ -298,8 +320,9 @@ function calculateStrategicValue(move, playerRow, playerCol) {
   }
 
   // Bonus for positions near walls (harder for player to escape)
-  if (move.row <= 1 || move.row >= ROWS - 2) value += 7;
-  if (move.column <= 1 || move.column >= COLUMNS - 2) value += 7;
+  if (move.row <= 1 || move.row >= ROWS - 2) value += 2;
+  if (move.column <= 1 || move.column >= COLUMNS - 2) value += 2;
+
 
   // Bonus for positions that could cut off player's path to apple
   var playerToApple = Math.abs(playerRow - apple.row) + Math.abs(playerCol - apple.column);
@@ -400,7 +423,7 @@ function hasCollidedWithChaser() {
 var rbHandleAppleCollisionChaser = handleAppleCollision;
 handleAppleCollision = function() {
   rbHandleAppleCollisionChaser();
-  if (score > 0 && score % 2 === 0) {
+  if (score > 0 && score % 5 === 0) {
     chaserSnake.growPending++;
   }
 };
@@ -844,9 +867,10 @@ function increaseGameSpeed() {
   }
 }
 
-// Add this function anywhere in your file:
+// Pause Function
 function togglePause() {
   isPaused = !isPaused;
+
   if (isPaused) {
     clearInterval(updateInterval);
     if (!$("#pause-message").length) {
@@ -868,5 +892,31 @@ function togglePause() {
   } else {
     $("#pause-message").remove();
     updateInterval = setInterval(update, snake.intervalTime);
+    requestAnimationFrame(render); // Restart visuals on unpause
   }
+}
+
+// Makes game look smoother
+
+function render() {
+  if (isPaused) {
+    requestAnimationFrame(render);
+    return;
+  }
+
+  // Reposition all player snake squares
+  snake.body.forEach(repositionSquare);
+
+  // Reposition chaser snake squares
+  if (chaserSnake.body) {
+    chaserSnake.body.forEach(repositionSquare);
+  }
+
+  // Reposition the apple
+  if (apple && apple.element) {
+    repositionSquare(apple);
+  }
+
+  // Loop to next animation frame
+  requestAnimationFrame(render);
 }
