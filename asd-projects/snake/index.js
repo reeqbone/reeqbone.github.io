@@ -87,19 +87,20 @@ function init() {
 // Initialize the chaser snake with starting position and properties
 function initializeChaserSnake() {
   chaserSnake.body = [];
-  chaserSnake.moveCounter = 3; // To control movement speed (chaser moves every few ticks)
-  chaserSnake.strategy = "hunt", "ambush", "intercept"; // Current AI strategy: hunt, intercept, or ambush
+  chaserSnake.moveCounter = 0; // To control movement speed (chaser moves every few ticks)
+  chaserSnake.strategy = "hunt"; // Start with hunt, will randomize later
   chaserSnake.lastPlayerPos = { row: snake.head.row, column: snake.head.column };
-  
+  chaserSnake.growPending = 0; // Track pending growth
+
   // Start chaser in a corner opposite to where player might be
   var startRow = ROWS - 3;
   var startColumn = COLUMNS - 3;
-  
+
   // Create initial chaser snake body (3 segments)
   makeChaserSquare(startRow, startColumn);
   makeChaserSquare(startRow, startColumn - 1);
   makeChaserSquare(startRow, startColumn - 2);
-  
+
   chaserSnake.head = chaserSnake.body[0];
   chaserSnake.tail = chaserSnake.body[chaserSnake.body.length - 1];
 }
@@ -107,35 +108,35 @@ function initializeChaserSnake() {
 // Create a single chaser snake segment and add it to the chaser's body
 function makeChaserSquare(row, column) {
   var chaserSquare = {};
-  
+
   chaserSquare.element = $("<div>").addClass("chaser-snake").appendTo(board);
   chaserSquare.row = row;
   chaserSquare.column = column;
-  
+
   repositionSquare(chaserSquare);
-  
+
   // Mark the head visually
   if (chaserSnake.body.length === 0) {
     chaserSquare.element.attr("id", "chaser-head");
   }
-  
+
   chaserSnake.body.push(chaserSquare);
   chaserSnake.tail = chaserSquare;
 }
 
 // Update chaser snake's position and strategy every few game ticks
 function updateChaserSnake() {
-  // Chaser moves every 2-3 game ticks to make it challenging but not impossible
+  // Chaser moves every tick for more challenge
   chaserSnake.moveCounter++;
-  if (chaserSnake.moveCounter < 1.5) return; // Only move every 2+ ticks
+  if (chaserSnake.moveCounter < 1.8) return;
   chaserSnake.moveCounter = 0;
-  
-  // Occasionally change AI strategy for unpredictability
-  if (Math.random() < 0.05) {
+
+  // Occasionally change AI strategy for unpredictability (more often)
+  if (Math.random() < 0.15) {
     var strategies = ["hunt", "intercept", "ambush"];
     chaserSnake.strategy = strategies[Math.floor(Math.random() * strategies.length)];
   }
-  
+
   // Decide next move based on current strategy
   var nextMove = calculateChaserMove();
   moveChaserSnake(nextMove);
@@ -147,7 +148,7 @@ function calculateChaserMove() {
   var headCol = chaserSnake.head.column;
   var playerRow = snake.head.row;
   var playerCol = snake.head.column;
-  
+
   // All possible moves (including diagonals for smarter AI)
   var possibleMoves = [
     { row: headRow - 1, column: headCol, direction: "up" },
@@ -160,19 +161,19 @@ function calculateChaserMove() {
     { row: headRow + 1, column: headCol - 1, direction: "down-left" },
     { row: headRow + 1, column: headCol + 1, direction: "down-right" }
   ];
-  
+
   // Filter out moves that would hit a wall or collide with a snake
   possibleMoves = possibleMoves.filter(function(move) {
     return isValidChaserMove(move.row, move.column);
   });
-  
+
   if (possibleMoves.length === 0) {
     // If no valid moves, try to find any available space (emergency)
     return findEmergencyMove();
   }
-  
+
   var bestMove;
-  
+
   // Choose move based on current AI strategy
   switch (chaserSnake.strategy) {
     case "hunt":
@@ -188,7 +189,28 @@ function calculateChaserMove() {
       // Fallback: random move
       bestMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
   }
-  
+
+  // Make the AI more challenging: if multiple moves are equally good, prefer the one that gets closer to the player's head direction
+  if (bestMove && Math.random() < 0.4) {
+    var playerDir = snake.head.direction;
+    var dirMap = {
+      "up":    { row: -1, column: 0 },
+      "down":  { row: 1, column: 0 },
+      "left":  { row: 0, column: -1 },
+      "right": { row: 0, column: 1 }
+    };
+    if (dirMap[playerDir]) {
+      var targetRow = playerRow + dirMap[playerDir].row;
+      var targetCol = playerCol + dirMap[playerDir].column;
+      var closerMoves = possibleMoves.filter(function(move) {
+        return move.row === targetRow && move.column === targetCol;
+      });
+      if (closerMoves.length > 0) {
+        bestMove = closerMoves[0];
+      }
+    }
+  }
+
   return bestMove || possibleMoves[0];
 }
 
@@ -196,34 +218,36 @@ function calculateChaserMove() {
 function huntPlayer(moves, playerRow, playerCol) {
   var bestMove = moves[0];
   var minDistance = Infinity;
-  
+
   moves.forEach(function(move) {
+    // Manhattan distance
     var distance = Math.abs(move.row - playerRow) + Math.abs(move.column - playerCol);
-    if (distance < minDistance) {
+    // Prefer moves that are not diagonal for more direct pursuit
+    if (distance < minDistance || (distance === minDistance && (move.direction === "up" || move.direction === "down" || move.direction === "left" || move.direction === "right"))) {
       minDistance = distance;
       bestMove = move;
     }
   });
-  
+
   return bestMove;
 }
 
 // "Intercept" strategy: try to predict where the player will be and move there
 function interceptPlayer(moves, playerRow, playerCol) {
   var predictedPlayerPos = predictPlayerPosition();
-  
+
   var bestMove = moves[0];
   var minDistance = Infinity;
-  
+
   moves.forEach(function(move) {
-    var distance = Math.abs(move.row - predictedPlayerPos.row) + 
+    var distance = Math.abs(move.row - predictedPlayerPos.row) +
                    Math.abs(move.column - predictedPlayerPos.column);
     if (distance < minDistance) {
       minDistance = distance;
       bestMove = move;
     }
   });
-  
+
   return bestMove;
 }
 
@@ -231,7 +255,7 @@ function interceptPlayer(moves, playerRow, playerCol) {
 function ambushPlayer(moves, playerRow, playerCol) {
   var bestMove = moves[0];
   var maxStrategicValue = -1;
-  
+
   moves.forEach(function(move) {
     var strategicValue = calculateStrategicValue(move, playerRow, playerCol);
     if (strategicValue > maxStrategicValue) {
@@ -239,7 +263,7 @@ function ambushPlayer(moves, playerRow, playerCol) {
       bestMove = move;
     }
   });
-  
+
   return bestMove;
 }
 
@@ -248,9 +272,9 @@ function predictPlayerPosition() {
   var currentDir = snake.head.direction || "right";
   var nextRow = snake.head.row;
   var nextCol = snake.head.column;
-  
-  // Predict 2 moves ahead
-  var steps = 2;
+
+  // Predict 3 moves ahead for more aggressive interception
+  var steps = 3;
   for (var i = 0; i < steps; i++) {
     switch (currentDir) {
       case "left": nextCol--; break;
@@ -259,29 +283,29 @@ function predictPlayerPosition() {
       case "down": nextRow++; break;
     }
   }
-  
+
   return { row: nextRow, column: nextCol };
 }
 
 // Assign a "strategic value" to a move for the ambush strategy
 function calculateStrategicValue(move, playerRow, playerCol) {
   var value = 0;
-  
+
   // Prefer positions not too close or too far from player
   var distance = Math.abs(move.row - playerRow) + Math.abs(move.column - playerCol);
-  if (distance >= 3 && distance <= 6) {
-    value += 10;
+  if (distance >= 2 && distance <= 5) {
+    value += 12;
   }
-  
+
   // Bonus for positions near walls (harder for player to escape)
-  if (move.row <= 2 || move.row >= ROWS - 3) value += 5;
-  if (move.column <= 2 || move.column >= COLUMNS - 3) value += 5;
-  
+  if (move.row <= 1 || move.row >= ROWS - 2) value += 7;
+  if (move.column <= 1 || move.column >= COLUMNS - 2) value += 7;
+
   // Bonus for positions that could cut off player's path to apple
   var playerToApple = Math.abs(playerRow - apple.row) + Math.abs(playerCol - apple.column);
   var moveToApple = Math.abs(move.row - apple.row) + Math.abs(move.column - apple.column);
-  if (moveToApple < playerToApple) value += 8;
-  
+  if (moveToApple < playerToApple) value += 10;
+
   return value;
 }
 
@@ -291,21 +315,21 @@ function isValidChaserMove(row, column) {
   if (row < 0 || row >= ROWS || column < 0 || column >= COLUMNS) {
     return false;
   }
-  
+
   // Check collision with chaser's own body
   for (var i = 0; i < chaserSnake.body.length; i++) {
     if (chaserSnake.body[i].row === row && chaserSnake.body[i].column === column) {
       return false;
     }
   }
-  
+
   // Check collision with player snake body (but allow collision with head for killing)
   for (var j = 1; j < snake.body.length; j++) {
     if (snake.body[j].row === row && snake.body[j].column === column) {
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -313,38 +337,46 @@ function isValidChaserMove(row, column) {
 function findEmergencyMove() {
   var headRow = chaserSnake.head.row;
   var headCol = chaserSnake.head.column;
-  
+
   // Try all adjacent positions
   for (var dr = -1; dr <= 1; dr++) {
     for (var dc = -1; dc <= 1; dc++) {
       if (dr === 0 && dc === 0) continue;
-      
+
       var newRow = headRow + dr;
       var newCol = headCol + dc;
-      
+
       if (isValidChaserMove(newRow, newCol)) {
         return { row: newRow, column: newCol, direction: "emergency" };
       }
     }
   }
-  
+
   return null; // No valid moves found
 }
 
 // Move the chaser snake's body and head to the next position
 function moveChaserSnake(nextMove) {
   if (!nextMove) return;
-  
+
+  // Grow if pending
+  if (chaserSnake.growPending > 0) {
+    // Add new segment at tail's previous position
+    var tail = chaserSnake.tail;
+    makeChaserSquare(tail.row, tail.column);
+    chaserSnake.growPending--;
+  }
+
   // Move body parts (from tail to head)
   for (var i = chaserSnake.body.length - 1; i > 0; i--) {
     var chaserSquare = chaserSnake.body[i];
     var nextChaserSquare = chaserSnake.body[i - 1];
-    
+
     chaserSquare.row = nextChaserSquare.row;
     chaserSquare.column = nextChaserSquare.column;
     repositionSquare(chaserSquare);
   }
-  
+
   // Move head to the new position
   chaserSnake.head.row = nextMove.row;
   chaserSnake.head.column = nextMove.column;
@@ -354,13 +386,24 @@ function moveChaserSnake(nextMove) {
 // Check if the player's head has collided with any part of the chaser snake
 function hasCollidedWithChaser() {
   for (var i = 0; i < chaserSnake.body.length; i++) {
-    if (snake.head.row === chaserSnake.body[i].row && 
+    if (snake.head.row === chaserSnake.body[i].row &&
         snake.head.column === chaserSnake.body[i].column) {
       return true;
     }
   }
   return false;
 }
+
+// --- GROW CHASER EVERY 2 APPLES ---
+
+// Wrap the original handleAppleCollision to grow chaser every 2 apples
+var rbHandleAppleCollisionChaser = handleAppleCollision;
+handleAppleCollision = function() {
+  rbHandleAppleCollisionChaser();
+  if (score > 0 && score % 2 === 0) {
+    chaserSnake.growPending++;
+  }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////// PROGRAM FUNCTIONS ////////////////////////////////////
