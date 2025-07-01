@@ -408,9 +408,13 @@ function moveChaserSnake(nextMove) {
 
 // Check if the player's head has collided with any part of the chaser snake
 function hasCollidedWithChaser() {
+  // Defensive: If chaserSnake.body is undefined or empty, no collision
+  if (!chaserSnake.body || chaserSnake.body.length === 0) return false;
   for (var i = 0; i < chaserSnake.body.length; i++) {
-    if (snake.head.row === chaserSnake.body[i].row &&
-        snake.head.column === chaserSnake.body[i].column) {
+    if (
+      snake.head.row === chaserSnake.body[i].row &&
+      snake.head.column === chaserSnake.body[i].column
+    ) {
       return true;
     }
   }
@@ -657,8 +661,21 @@ function endGame() {
   // stop update function from running
   clearInterval(updateInterval);
 
-  // clear board of all elements`
+  // clear board of all elements
   board.empty();
+
+  // Remove chaser snake DOM elements and reset chaser state
+  if (chaserSnake.body) {
+    chaserSnake.body.forEach(function(part) {
+      if (part.element) part.element.remove();
+    });
+    chaserSnake.body = [];
+    chaserSnake.head = null;
+    chaserSnake.tail = null;
+    chaserSnake.moveCounter = 0;
+    chaserSnake.growPending = 0;
+    chaserSnake.tick = 0;
+  }
 
   // update the highScoreElement to display the highScore
   highScoreElement.text("High Score: " + calculateHighScore());
@@ -668,9 +685,8 @@ function endGame() {
   // restart the game after 1000 ms
   setTimeout(init, 1000);
 
-  console.log("endGame"); // this is for later, my function will check logs to see if endGame is there, if it is, death count is updated by 1
-  updateDeathCountDisplay()// alert to notify the user that the game has ended and will restart
-
+  console.log("endGame");
+  updateDeathCountDisplay();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -759,9 +775,7 @@ function getRandomAvailablePosition() {
   var spaceIsAvailable;
   var randomPosition = {};
 
-  // Generate random positions until one is found that doesn't overlap with the snake or chaser
   while (!spaceIsAvailable) {
-    // Use APPLE_MARGIN to keep apples away from the edges
     randomPosition.column = Math.floor(Math.random() * (COLUMNS - 2 * APPLE_MARGIN)) + APPLE_MARGIN;
     randomPosition.row = Math.floor(Math.random() * (ROWS - 2 * APPLE_MARGIN)) + APPLE_MARGIN;
     spaceIsAvailable = true;
@@ -772,9 +786,9 @@ function getRandomAvailablePosition() {
         spaceIsAvailable = false;
       }
     }
-    
-    // Check if position is occupied by the chaser snake
-    if (chaserSnake.body) {
+
+    // Check if position is occupied by the chaser snake (defensive)
+    if (chaserSnake.body && chaserSnake.body.length > 0) {
       for (var j = 0; j < chaserSnake.body.length; j++) {
         if (chaserSnake.body[j].row === randomPosition.row && chaserSnake.body[j].column === randomPosition.column) {
           spaceIsAvailable = false;
@@ -907,8 +921,8 @@ function render() {
   // Reposition all player snake squares
   snake.body.forEach(repositionSquare);
 
-  // Reposition chaser snake squares
-  if (chaserSnake.body) {
+  // Reposition chaser snake squares (defensive)
+  if (chaserSnake.body && chaserSnake.body.length > 0) {
     chaserSnake.body.forEach(repositionSquare);
   }
 
