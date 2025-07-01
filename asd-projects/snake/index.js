@@ -129,9 +129,9 @@ function makeChaserSquare(row, column) {
 
 // Update chaser snake's position and strategy every few game ticks
 function updateChaserSnake() {
-  // Chaser moves every tick for more challenge
   chaserSnake.moveCounter++;
-  if (chaserSnake.moveCounter < 1.8) return;
+  if (typeof chaserSnake.speed === "undefined") chaserSnake.speed = 1.8;
+  if (chaserSnake.moveCounter < chaserSnake.speed) return;
   chaserSnake.moveCounter = 0;
 
   // Occasionally change AI strategy for unpredictability (more often)
@@ -458,36 +458,19 @@ function update() {
 
 
 function checkForNewDirection(event) {
-  /* 
-  TODO 6b: Update snake.head.direction based on the value of activeKey.
-  
-  BONUS: Only allow direction changes to take place if the new direction is
-  perpendicular to the current direction
-  */
+  // Only allow direction changes if the new direction is perpendicular or not directly opposite to the current direction
+  var dir = snake.head.direction;
 
-  // I simplfy this using logical condtionals. Did it as a test to test my skills.
-  if (activeKey === KEY.LEFT || activeKey === KEY.RIGHT || activeKey === KEY.UP || activeKey === KEY.DOWN) {
-    snake.head.direction = 
-      activeKey === KEY.LEFT ? "left" :
-      activeKey === KEY.RIGHT ? "right" :
-      activeKey === KEY.UP ? "up" :
-      activeKey === KEY.DOWN ? "down":
-    snake.head.direction; // keep the current direction if no valid key is pressed
-  }
-  
-  // Second Conditonal for WASD CONTROLs
-  if (activeKey === KEY.A || activeKey === KEY.D || activeKey === KEY.W || activeKey === KEY.S) {
-    snake.head.direction = 
-      activeKey === KEY.A ? "left" :
-      activeKey === KEY.D ? "right" :
-      activeKey === KEY.W ? "up" :
-      activeKey === KEY.S ? "down":
-    snake.head.direction; // keep the current direction if no valid key is pressed
-  }
-
-  // FILL IN THE REST
-
- // console.log(snake.head.direction);     // uncomment me!
+  // Arrow keys
+  if (activeKey === KEY.LEFT && dir !== "right") snake.head.direction = "left";
+  else if (activeKey === KEY.RIGHT && dir !== "left") snake.head.direction = "right";
+  else if (activeKey === KEY.UP && dir !== "down") snake.head.direction = "up";
+  else if (activeKey === KEY.DOWN && dir !== "up") snake.head.direction = "down";
+  // WASD keys
+  else if (activeKey === KEY.A && dir !== "right") snake.head.direction = "left";
+  else if (activeKey === KEY.D && dir !== "left") snake.head.direction = "right";
+  else if (activeKey === KEY.W && dir !== "down") snake.head.direction = "up";
+  else if (activeKey === KEY.S && dir !== "up") snake.head.direction = "down";
 }
 
 function moveSnake() {
@@ -594,6 +577,7 @@ function handleAppleCollision() {
   // increase the score and update the score DOM element
   score++;
   scoreElement.text("Score: " + score);
+  increaseChaserSpeedIfNeeded();
 
   // Remove existing Apple and create a new one
   apple.element.remove();
@@ -675,6 +659,7 @@ function endGame() {
     chaserSnake.moveCounter = 0;
     chaserSnake.growPending = 0;
     chaserSnake.tick = 0;
+    chaserSnake.speed = 1.8; // <-- Reset chaser speed to default on game over
   }
 
   // update the highScoreElement to display the highScore
@@ -933,4 +918,15 @@ function render() {
 
   // Loop to next animation frame
   requestAnimationFrame(render);
+}
+
+function increaseChaserSpeedIfNeeded() {
+  // Only increase speed every 3 apples (score is a multiple of 3, but not zero)
+  if (score > 0 && score % 3 === 0) {
+    // Lower moveCounter threshold to make chaser move more often (faster)
+    if (typeof chaserSnake.speed === "undefined") {
+      chaserSnake.speed = 1.8; // default starting value from your code
+    }
+    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.3); // Decrease threshold, min 0.2 for sanity
+  }
 }
