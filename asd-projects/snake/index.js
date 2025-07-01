@@ -966,7 +966,7 @@ function increaseChaserSpeedIfNeeded() {
     if (typeof chaserSnake.speed === "undefined") {
       chaserSnake.speed = 1.8; // default starting value from your code
     }
-    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.3); // Decrease threshold, min 0.2 for sanity
+    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.6); // Decrease threshold, min 0.2 for sanity
   }
 }
 
