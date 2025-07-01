@@ -60,6 +60,11 @@ $("body").on("keydown", handleKeyDown);
 init();
 
 function init() {
+  // Clear previous game if any
+  clearInterval(updateInterval);
+  $(".snake-square, .chaser-square, .apple").remove(); // clean up all squares
+  isPaused = false;
+  score = 0;
   // TODO 4c-2: initialize the snake
   // initialize the snake's body as an empty Array
   snake.body = [];
@@ -68,6 +73,7 @@ function init() {
   makeSnakeSquare(10, 10); // Places snake at the center of the board
   snake.head = snake.body[0];
 
+  chaserSnake = {};  // Reset chaser snake state
   // Initialize chaser snake - starts at a corner
   initializeChaserSnake();
 
@@ -79,7 +85,8 @@ function init() {
   // Set initial interval time
   
   snake.intervalTime = 115; // Anytime an apple is eaten, the game increases in speed // Functional,ity is found in Extras section
-  updateInterval = setInterval(update, snake.intervalTime);//16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
+  clearInterval(updateInterval);
+    updateInterval = setInterval(update, snake.intervalTime);//16.6 = 60fps //33.333333333333336 = 30 fps // 100 = 10 fps
   requestAnimationFrame(render);
 
 }
@@ -682,6 +689,9 @@ for(var i = 1; i < snake.body.length; i++) {
 
 function endGame() {
   clearInterval(updateInterval);
+  updateInterval = null;
+  isPaused = true;
+  clearInterval(updateInterval);
   board.empty();
   if (chaserSnake.body) {
     chaserSnake.body.forEach(function(part) {
@@ -885,7 +895,8 @@ function increaseGameSpeed() {
   // Decrease interval time by 3 ms, but don't go below a minimum of 30fps (33ms)
   snake.intervalTime =  (snake.intervalTime - 3); // makes sure that a boundry is set so the game does not go too fast
   clearInterval(updateInterval); // Clear the existing interval and updates the game with a new one
-  updateInterval = setInterval(update, snake.intervalTime); // Set a new interval with the updated speed
+  clearInterval(updateInterval);
+    updateInterval = setInterval(update, snake.intervalTime); // Set a new interval with the updated speed
   console.log("Game speed has increased! New interval time: " + snake.intervalTime + "ms"); //debugging purposes to see if the speed is increasing 
 
    // Boundry Condtional:
@@ -928,6 +939,7 @@ function togglePause() {
   } else {
     $("#pause-message").remove();
     // Always clear before setting a new interval to avoid stacking intervals
+    clearInterval(updateInterval);
     clearInterval(updateInterval);
     updateInterval = setInterval(update, snake.intervalTime);
     // Unpausing should also allow the game to respond to key events again
