@@ -115,3 +115,27 @@ body {
   background-color: #aa485a;
   box-shadow: 0 0 25px #c4aead
 }
+
+#gameInfo {
+  position: absolute;
+  top: 3px;
+  left: 18px;
+  z-index: 10;
+}
+
+.info-box {
+  color: #f9f5d7;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #282828;
+  padding: 8px 18px;
+  background: rgba(40, 40, 40, 0.7);
+  border-radius: 8px;
+  margin: 8px;
+  display: inline-block;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+.snake, .apple, .chaser-snake {
+  will-change: transform;
+}

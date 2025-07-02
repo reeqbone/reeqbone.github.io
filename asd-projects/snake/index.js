@@ -1,3 +1,4 @@
+let gameRunning = false;
 /* global $, sessionStorage*/
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +61,23 @@ $("body").on("keydown", handleKeyDown);
 init();
 
 function init() {
+  // Add info UI if not already added
+  
+  
+  if (!document.getElementById("gameInfo")) {
+    const infoBox = document.createElement("div");
+    infoBox.id = "gameInfo";
+    const speedDiv = document.createElement("div");
+    speedDiv.id = "speedDisplay";
+    speedDiv.className = "info-box";
+    const stratDiv = document.createElement("div");
+    stratDiv.id = "strategyDisplay";
+    stratDiv.className = "info-box";
+    infoBox.appendChild(speedDiv);
+    infoBox.appendChild(stratDiv);
+    document.body.appendChild(infoBox);
+  }
+
   // Clear previous game if any
   clearInterval(updateInterval);
   $(".snake-square, .chaser-square, .apple").remove(); // clean up all squares
@@ -170,7 +188,7 @@ function updateChaserSnake() {
   }
 
   if (chaserSnake.lastStrategy !== chaserSnake.strategy) {
-    console.log("Chaser switched to: " + chaserSnake.strategy);
+ //   console.log("Chaser switched to: " + chaserSnake.strategy);
     chaserSnake.lastStrategy = chaserSnake.strategy;
     chaserSnake.strategyChangeCounter++;
   }
@@ -210,7 +228,7 @@ function calculateChaserMove() {
 
     // If it didn’t actually move (got stuck), force emergency move
   if (chaserSnake.head.row === chaserSnake.body[1].row && chaserSnake.head.column === chaserSnake.body[1].column) {
-    console.log("Chaser stuck! Forcing emergency move.");
+    // console.log("Chaser stuck! Forcing emergency move.");
         var emergencyMove = findEmergencyMove();
           if (emergencyMove) {
     moveChaserSnake(emergencyMove);
@@ -487,6 +505,11 @@ handleAppleCollision = function() {
  * collisions with the walls.
  */
 function update() {
+  // Update UI info
+  const speedEl = document.getElementById("speedDisplay");
+  const stratEl = document.getElementById("strategyDisplay");
+  if (speedEl) speedEl.textContent = "Speed: " + snake.intervalTime + "ms";
+  if (stratEl) stratEl.textContent = "Chaser: " + (chaserSnake.strategy || "default");
   if (isPaused) return;
 
   // TODO 5b: Fill in the update function's code block
@@ -501,7 +524,6 @@ function update() {
     handleAppleCollision();
   }
 }
-
 
 function checkForNewDirection(event) {
   // Only allow direction changes if the new direction is perpendicular or not directly opposite to the current direction
@@ -543,7 +565,6 @@ function moveSnake() {
     repositionSquare(snakeSquare);
  }
 
-
   //Before moving the head, check for a new direction from the keyboard input
   checkForNewDirection();
 
@@ -568,7 +589,6 @@ function moveSnake() {
   }
   repositionSquare(snake.head);
 }
-
 
 function hasHitWall() {
   /* 
@@ -683,7 +703,6 @@ for(var i = 1; i < snake.body.length; i++) {
   
   */
 
-
   return false;
 }
 
@@ -713,7 +732,8 @@ function endGame() {
   scoreElement.text("Score: 0");
   score = 0;
   setTimeout(init, 1000);
-  console.log("endGame");
+  gameRunning = false
+ // console.log("endGame");
   updateDeathCountDisplay();
 }
 
@@ -768,8 +788,6 @@ function makeSnakeSquare(row, column) {
   snake.body.push(snakeSquare);
   snake.tail = snakeSquare;
 }
-
-
 
 function handleKeyDown(event) {
   activeKey = event.which;
@@ -875,6 +893,8 @@ var rbEndGame = endGame;  // stores endGame() function within a new variable cal
 // I edit the code for endGame so its logged inside a console anytime a border is reached, rbEndGame will get all this data and store it in the deathCount variable.
 endGame = function() { // replacing the original endGame function, but still keeps its original code and data. Acts as a backup for storing data
   deathCount++;
+  gameRunning = false;
+  isPaused = false;
   updateDeathCountDisplay();
   rbEndGame();
 };
@@ -890,14 +910,13 @@ handleAppleCollision = function() { // replacing the original handleAppleCollisi
  // console.log("Apple eaten! Speed increased!"); // Debugging purposes to see if the speed is increasing
 };
 
-
 function increaseGameSpeed() {
   // Decrease interval time by 3 ms, but don't go below a minimum of 30fps (33ms)
   snake.intervalTime =  (snake.intervalTime - 3); // makes sure that a boundry is set so the game does not go too fast
   clearInterval(updateInterval); // Clear the existing interval and updates the game with a new one
   clearInterval(updateInterval);
     updateInterval = setInterval(update, snake.intervalTime); // Set a new interval with the updated speed
-  console.log("Game speed has increased! New interval time: " + snake.intervalTime + "ms"); //debugging purposes to see if the speed is increasing 
+ // console.log("Game speed has increased! New interval time: " + snake.intervalTime + "ms"); //debugging purposes to see if the speed is increasing 
 
    // Boundry Condtional:
   if (snake.intervalTime < 33){
@@ -976,9 +995,9 @@ function increaseChaserSpeedIfNeeded() {
   if (score > 0 && score % 3 === 0) {
     // Lower moveCounter threshold to make chaser move more often (faster)
     if (typeof chaserSnake.speed === "undefined") {
-      chaserSnake.speed = 1.8; // default starting value from your code
+      chaserSnake.speed = 1.8; // default starting value 
     }
-    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.6); // Decrease threshold, min 0.2 for sanity
+    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.35); // Decrease threshold is .44 
   }
 }
 
@@ -998,4 +1017,45 @@ function predictPlayerPosition() {
   }
 
   return { row: nextRow, column: nextCol };
+}
+
+function smartChaserMove() {
+  if (!playerSnake.head || !chaserSnake.head) return;
+
+  let target = { row: playerSnake.head.row, column: playerSnake.head.column };
+
+  // Predict the player's next tile
+  let velocity = playerSnake.velocity;
+  target.row += velocity.row;
+  target.column += velocity.column;
+
+  // Simple scoring: pick the adjacent move that minimizes distance to predicted target
+  const directions = [
+    { row: -1, column: 0 },
+    { row: 1, column: 0 },
+    { row: 0, column: -1 },
+    { row: 0, column: 1 },
+  ];
+
+  let bestMove = null;
+  let minDistance = Infinity;
+
+  for (let dir of directions) {
+    let nextRow = chaserSnake.head.row + dir.row;
+    let nextCol = chaserSnake.head.column + dir.column;
+
+    // Skip out-of-bounds or self-collision
+    if (nextRow < 0 || nextRow >= 32 || nextCol < 0 || nextCol >= 32) continue;
+
+    let dist = Math.abs(nextRow - target.row) + Math.abs(nextCol - target.column);
+    if (dist < minDistance) {
+      minDistance = dist;
+      bestMove = dir;
+    }
+  }
+
+  if (bestMove) {
+    chaserSnake.velocity = bestMove;
+    moveChaserSnake(bestMove);
+  }
 }
