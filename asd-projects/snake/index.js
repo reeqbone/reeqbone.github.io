@@ -992,12 +992,12 @@ function render() {
 
 function increaseChaserSpeedIfNeeded() {
   // Only increase speed every 3 apples (score is a multiple of 3, but not zero)
-  if (score > 0 && score % 3 === 0) {
+  if (score > 0 && score % 4 === 0) {
     // Lower moveCounter threshold to make chaser move more often (faster)
     if (typeof chaserSnake.speed === "undefined") {
       chaserSnake.speed = 1.8; // default starting value 
     }
-    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.35); // Decrease threshold is .44 
+    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.37); // Decrease threshold is .44 
   }
 }
 
