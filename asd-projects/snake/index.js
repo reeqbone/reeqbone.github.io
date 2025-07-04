@@ -59,22 +59,17 @@ $("body").on("keydown", handleKeyDown);
 
 // start the game
 init();
-
 function init() {
-  // Add info UI if not already added
-  
-  
+  // Add info UI if not already present
   if (!document.getElementById("gameInfo")) {
     const infoBox = document.createElement("div");
     infoBox.id = "gameInfo";
-    const speedDiv = document.createElement("div");
-    speedDiv.id = "speedDisplay";
-    speedDiv.className = "info-box";
-    const stratDiv = document.createElement("div");
-    stratDiv.id = "strategyDisplay";
-    stratDiv.className = "info-box";
-    infoBox.appendChild(speedDiv);
-    infoBox.appendChild(stratDiv);
+    ["speedDisplay", "strategyDisplay", "chaserSpeedDisplay"].forEach(id => {
+      const div = document.createElement("div");
+      div.id = id;
+      div.className = "info-box";
+      infoBox.appendChild(div);
+    });
     document.body.appendChild(infoBox);
   }
 
@@ -507,17 +502,23 @@ handleAppleCollision = function() {
 function update() {
   // Update UI info
   const speedEl = document.getElementById("speedDisplay");
+  const chaserSpeedEl = document.getElementById("chaserSpeedDisplay");
   const stratEl = document.getElementById("strategyDisplay");
-  if (speedEl) speedEl.textContent = "Speed: " + snake.intervalTime + "ms";
-  if (stratEl) stratEl.textContent = "Chaser: " + (chaserSnake.strategy || "default");
+  if (speedEl) speedEl.textContent = "Snake speed: " + snake.intervalTime + "ms";
+  if (stratEl) stratEl.textContent = "Chaser strategy: " + (chaserSnake.strategy || "default");
+  if (chaserSpeedEl) chaserSpeedEl.textContent = "Chaser speed: " + (typeof chaserSnake.speed === "number" ? chaserSnake.speed.toFixed(2) : "-") + " ticks";
   if (isPaused) return;
 
-  // TODO 5b: Fill in the update function's code block
+  // Move snakes
   moveSnake();
-  updateChaserSnake(); // Update chaser snake
+  updateChaserSnake();
 
+  // Only process one event per tick, in priority order:
+  // 1. Wall/self/chaser collision (game over)
+  // 2. Apple collision (only if not game over)
   if (hasHitWall() || hasCollidedWithSnake() || hasCollidedWithChaser()) {
     endGame();
+    return; // Prevent further processing this tick
   }
 
   if (hasCollidedWithApple()) {
@@ -643,7 +644,8 @@ function handleAppleCollision() {
   // increase the score and update the score DOM element
   score++;
   scoreElement.text("Score: " + score);
-  increaseChaserSpeedIfNeeded();
+  // increaseChaserSpeedIfNeeded();
+  // function above no longer need, speed increase handle thru increaseGameSpeed
 
   // Remove existing Apple and create a new one
   apple.element.remove();
@@ -911,27 +913,37 @@ handleAppleCollision = function() { // replacing the original handleAppleCollisi
 };
 
 function increaseGameSpeed() {
-  // Decrease interval time by 3 ms, but don't go below a minimum of 30fps (33ms)
-  snake.intervalTime =  (snake.intervalTime - 3); // makes sure that a boundry is set so the game does not go too fast
-  clearInterval(updateInterval); // Clear the existing interval and updates the game with a new one
-  clearInterval(updateInterval);
-    updateInterval = setInterval(update, snake.intervalTime); // Set a new interval with the updated speed
- // console.log("Game speed has increased! New interval time: " + snake.intervalTime + "ms"); //debugging purposes to see if the speed is increasing 
+  // Decrease interval time by 3 ms, but don't go below a minimum of 58ms (endless mode)
+  // if (snake.intervalTime === 79 || score === 11) {
+  //   snake.intervalTime -= 5;
+  // }
+  if (snake.intervalTime > 63) {
+    snake.intervalTime -= 3;
+  }
 
-   // Boundry Condtional:
-  if (snake.intervalTime < 33){
-    alert("You have won the game!") // Game is running at unreasonable speed, so the game is over
-    endGame();
+  // Lock minimum speed to 58ms (or 63ms if you want it a bit easier)
+  if (snake.intervalTime < 63) {
+    snake.intervalTime = 63;
   }
-  /*
-  else if (score >= 27) { // It takes about 26 apples to win the game (winning game is reaching 35mms speed)
-    alert("Who the HELL ate all MY APPLES!?!"); //Game is running at unreasonable speed, so the game is over
-    endGame();
-  }
-    */
-  else if (snake.intervalTime >= 33) { 
-    // do nothing, the game is still running at a reasonable speed
-  }
+
+  // Chaser should always be a bit slower than the player, but still a challenge
+  // Chaser speed is a delay threshold: lower = faster
+  // We'll set chaserSnake.speed so that it moves every X ticks (e.g., 1.1x to 1.4x slower than player)
+  // The lower the value, the faster the chaser moves (1 = every tick, 2 = every other tick)
+  // We want chaserSnake.speed to decrease as snake gets faster, but never be less than 1.1
+  // and never more than 2.2 (tunable for balance)
+  var minChaserSpeed = 0.33; // fastest (chaser moves almost every tick)
+  var maxChaserSpeed = 1.8; // slowest (chaser moves every 2.2 ticks)
+  var minInterval = 63; // fastest snake
+  var maxInterval = 115; // slowest snake
+  var t = (snake.intervalTime - minInterval) / (maxInterval - minInterval);
+  // t=0 when snake is fastest, t=1 when slowest
+  chaserSnake.speed = minChaserSpeed + (maxChaserSpeed - minChaserSpeed) * t;
+  if (chaserSnake.speed < minChaserSpeed) chaserSnake.speed = minChaserSpeed;
+  if (chaserSnake.speed > maxChaserSpeed) chaserSnake.speed = maxChaserSpeed;
+
+  clearInterval(updateInterval);
+  updateInterval = setInterval(update, snake.intervalTime);
 }
 
 // Pause Function
@@ -990,16 +1002,18 @@ function render() {
   requestAnimationFrame(render);
 }
 
-function increaseChaserSpeedIfNeeded() {
-  // Only increase speed every 3 apples (score is a multiple of 3, but not zero)
-  if (score > 0 && score % 4 === 0) {
-    // Lower moveCounter threshold to make chaser move more often (faster)
-    if (typeof chaserSnake.speed === "undefined") {
-      chaserSnake.speed = 1.8; // default starting value 
-    }
-    chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.37); // Decrease threshold is .44 
-  }
-}
+/// No Longer need, Speed handle through increaseGameSpeed
+// function increaseChaserSpeedIfNeeded() {
+//   // Only increase speed every 3 apples (score is a multiple of 3, but not zero)
+//   if (score > 0 && score % 4 === 0) {
+//     // Lower speed value so chaser moves more frequently (speed is a delay threshold)
+//     if (typeof chaserSnake.speed !== "number" || isNaN(chaserSnake.speed)) {
+//       chaserSnake.speed = 1.8; // default starting value 
+//     }
+//     // Decrease speed, but never go below a minimum threshold (e.g., 0.2)
+//     chaserSnake.speed = Math.max(0.2, chaserSnake.speed - 0.35);
+//   }
+// }
 
 function predictPlayerPosition() {
   var currentDir = snake.head.direction || "right";
