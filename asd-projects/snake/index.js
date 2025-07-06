@@ -1,9 +1,86 @@
-let gameRunning = false;
+//  Set Score Debug Feature
+function setScoreDebug(newScore) {
+  // Clamp to 0-20 only, and show error if above 20
+  newScore = parseInt(newScore);
+  if (isNaN(newScore) || newScore < 0) newScore = 0;
+  if (newScore > 20) {
+    alert("Score cannot be set above 20!");
+    return;
+  }
+  score = newScore;
+  scoreElement.text("Score: " + score);
+
+  //  Snake body management 
+  // Remove all but the head
+  if (snake.body && snake.body.length > 1) {
+    for (let i = snake.body.length - 1; i > 0; i--) {
+      if (snake.body[i].element) snake.body[i].element.remove();
+    }
+    snake.body = [snake.body[0]];
+    snake.tail = snake.body[0];
+  }
+  // Grow or shrink snake to match score and handle >=21 logic
+  let growMode = score < 21;
+  let segments = growMode ? score : 1; // If score >=21, only head remains
+  for (let i = 1; i <= segments; i++) {
+    let row = snake.tail.row, column = snake.tail.column;
+    if (snake.tail.direction === "left") column += 1;
+    else if (snake.tail.direction === "right") column -= 1;
+    else if (snake.tail.direction === "up") row += 1;
+    else if (snake.tail.direction === "down") row -= 1;
+    makeSnakeSquare(row, column);
+  }
+
+  // --- Chaser body management ---
+  if (chaserSnake.body && chaserSnake.body.length > 1) {
+    for (let i = chaserSnake.body.length - 1; i > 0; i--) {
+      if (chaserSnake.body[i].element) chaserSnake.body[i].element.remove();
+    }
+    chaserSnake.body = [chaserSnake.body[0]];
+    chaserSnake.tail = chaserSnake.body[0];
+  }
+  // Always ensure chaserSnake.growPending is reset
+  chaserSnake.growPending = 0;
+  if (score >= 21) {
+    // Only head remains for chaser, do NOT add any segments
+    // Also ensure tail is set to head
+    chaserSnake.tail = chaserSnake.body[0];
+  } else {
+    // Regular chaser growth (every 2 apples)
+    let chaserSegments = Math.floor(score / 2);
+    for (let i = 1; i <= chaserSegments; i++) {
+      let row = chaserSnake.tail.row, column = chaserSnake.tail.column;
+      if (chaserSnake.tail.direction === "left") column += 1;
+      else if (chaserSnake.tail.direction === "right") column -= 1;
+      else if (chaserSnake.tail.direction === "up") row += 1;
+      else if (chaserSnake.tail.direction === "down") row -= 1;
+      makeChaserSquare(row, column);
+    }
+  }
+
+  // Update speed as if apples were eaten
+  snake.intervalTime = 115;
+  for (let i = 0; i < score; i++) {
+    increaseGameSpeed();
+  }
+}
+
+// Keyboard shortcut: Shift+S to set score
+$('body').off('keydown.setScore').on('keydown.setScore', function(event) {
+  if (event.shiftKey && event.key.toLowerCase() === 's') {
+    let val = prompt('Set score to:', score);
+    if (val !== null && !isNaN(parseInt(val))) {
+      setScoreDebug(parseInt(val));
+    }
+  }
+});
 /* global $, sessionStorage*/
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////// VARIABLE DECLARATIONS ////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+
+let gameRunning = false;
 
 // HTML jQuery Objects
 var board = $("#board");
@@ -482,7 +559,7 @@ function hasCollidedWithChaser() {
 
 // --- GROW CHASER EVERY X APPLES ---
 
-// Wrap the original handleAppleCollision to grow chaser every 2 apples
+// Wrap the original handleAppleCollision to grow chaser every 3 apples (3, 6, 9, ...)
 var rbHandleAppleCollisionChaser = handleAppleCollision;
 handleAppleCollision = function() {
   rbHandleAppleCollisionChaser();
@@ -644,48 +721,61 @@ function handleAppleCollision() {
   // increase the score and update the score DOM element
   score++;
   scoreElement.text("Score: " + score);
-  // increaseChaserSpeedIfNeeded();
-  // function above no longer need, speed increase handle thru increaseGameSpeed
 
   // Remove existing Apple and create a new one
   apple.element.remove();
   makeApple();
 
-  /* 
-  TODO 10: determine the location of the next snakeSquare based on the .row,
-  .column and .direction properties of the snake.tail snakeSquare
-  
-  HINT: snake.tail.direction will be either "left", "right", "up", or "down".
-  If the tail is moving "left", place the next snakeSquare to its right. 
-  If the tail is moving "down", place the next snakeSquare above it.
-  etc...
-  */
+  // --- Snake body management ---
+  if (score >= 21) {
+    // If snake is longer than 1, remove tail instead of growing
+    if (snake.body.length > 1) {
+      let tail = snake.body.pop();
+      if (tail.element) tail.element.remove();
+      snake.tail = snake.body[snake.body.length - 1];
+    } else {
+      // If only head remains, start growing again as normal
+      addSnakeSegmentAtTail();
+    }
+  } else {
+    // Regular growth before score 21
+    addSnakeSegmentAtTail();
+  }
+
+  // --- Chaser body management ---
+  if (score >= 21) {
+    // Remove chaser tail if longer than 1
+    if (chaserSnake.body && chaserSnake.body.length > 1) {
+      let tail = chaserSnake.body.pop();
+      if (tail.element) tail.element.remove();
+      chaserSnake.tail = chaserSnake.body[chaserSnake.body.length - 1];
+    } else {
+      // If only head remains, start growing again as normal
+      chaserSnake.growPending++;
+    }
+  }
+}
+
+// Helper to add a segment at the snake's tail (same logic as before)
+function addSnakeSegmentAtTail() {
   var row = 0;
   var column = 0;
-
-  // code to determine the row and column of the snakeSquare to add to the snake
   if (snake.tail.direction === "left") {
-    row = snake.tail.row; // if the tail is moving left, the next square will be to the right
-    column = snake.tail.column + 1; // so we add 1 to the column
+    row = snake.tail.row;
+    column = snake.tail.column + 1;
   } else if (snake.tail.direction === "right") {
-    row = snake.tail.row; // if the tail is moving right, the next square will be to the left
-    column = snake.tail.column - 1; // so we subtract 1 from the column
+    row = snake.tail.row;
+    column = snake.tail.column - 1;
   } else if (snake.tail.direction === "up") {
-    row = snake.tail.row + 1; // if the tail is moving up, the next square will be below it
-    column = snake.tail.column; // so we keep the column the same
+    row = snake.tail.row + 1;
+    column = snake.tail.column;
   } else if (snake.tail.direction === "down") {
-    row = snake.tail.row - 1; // if the tail is moving down, the next square will be above it
-    column = snake.tail.column; // so we keep the column the same
+    row = snake.tail.row - 1;
+    column = snake.tail.column;
   }
-  // make a new snakeSquare at the determined row and column
-  // and add it to the snake's body
-  // makeSnakeSquare(row, column) will create a new snakeSquare and add it to the snake's body
-  // and position it on the screen
-  // This will also set the new tail to the new snakeSquare
-  // so the snake will grow by one square
-
   makeSnakeSquare(row, column);
 }
+
 
 function hasCollidedWithSnake() {
 for(var i = 1; i < snake.body.length; i++) {
@@ -917,8 +1007,10 @@ function increaseGameSpeed() {
   // if (snake.intervalTime === 79 || score === 11) {
   //   snake.intervalTime -= 5;
   // }
-  if (snake.intervalTime > 63) {
+  if (snake.intervalTime > 88) {
     snake.intervalTime -= 3;
+  } else if (snake.intervalTime > 63) {
+    snake.intervalTime -= 5;
   }
 
   // Lock minimum speed to 58ms (or 63ms if you want it a bit easier)
@@ -932,7 +1024,7 @@ function increaseGameSpeed() {
   // The lower the value, the faster the chaser moves (1 = every tick, 2 = every other tick)
   // We want chaserSnake.speed to decrease as snake gets faster, but never be less than 1.1
   // and never more than 2.2 (tunable for balance)
-  var minChaserSpeed = 0.33; // fastest (chaser moves almost every tick)
+  var minChaserSpeed = 1.07; // fastest (chaser moves almost every tick)
   var maxChaserSpeed = 1.8; // slowest (chaser moves every 2.2 ticks)
   var minInterval = 63; // fastest snake
   var maxInterval = 115; // slowest snake
