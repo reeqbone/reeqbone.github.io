@@ -41,21 +41,31 @@ function setScoreDebug(newScore) {
   }
   // Always ensure chaserSnake.growPending is reset
   chaserSnake.growPending = 0;
-  if (score >= 21) {
-    // Only head remains for chaser, do NOT add any segments
-    // Also ensure tail is set to head
-    chaserSnake.tail = chaserSnake.body[0];
-  } else {
-    // Regular chaser growth (every 2 apples)
-    let chaserSegments = Math.floor(score / 2);
-    for (let i = 1; i <= chaserSegments; i++) {
-      let row = chaserSnake.tail.row, column = chaserSnake.tail.column;
-      if (chaserSnake.tail.direction === "left") column += 1;
-      else if (chaserSnake.tail.direction === "right") column -= 1;
-      else if (chaserSnake.tail.direction === "up") row += 1;
-      else if (chaserSnake.tail.direction === "down") row -= 1;
-      makeChaserSquare(row, column);
-    }
+  // if (score >= 21) {
+  //   // Only head remains for chaser, do NOT add any segments
+  //   // Also ensure tail is set to head
+  //   chaserSnake.tail = chaserSnake.body[0];
+  // } else {
+  //   // Regular chaser growth (every 2 apples)
+  //   let chaserSegments = Math.floor(score / 2);
+  //   for (let i = 1; i <= chaserSegments; i++) {
+  //     let row = chaserSnake.tail.row, column = chaserSnake.tail.column;
+  //     if (chaserSnake.tail.direction === "left") column += 1;
+  //     else if (chaserSnake.tail.direction === "right") column -= 1;
+  //     else if (chaserSnake.tail.direction === "up") row += 1;
+  //     else if (chaserSnake.tail.direction === "down") row -= 1;
+  //     makeChaserSquare(row, column);
+  //   }
+  // }
+  // Always grow chaser at multiples of 2
+  let chaserSegments = Math.floor(score / 2);
+  for (let i = 1; i <= chaserSegments; i++) {
+    let row = chaserSnake.tail.row, column = chaserSnake.tail.column;
+    if (chaserSnake.tail.direction === "left") column += 1;
+    else if (chaserSnake.tail.direction === "right") column -= 1;
+    else if (chaserSnake.tail.direction === "up") row += 1;
+    else if (chaserSnake.tail.direction === "down") row -= 1;
+    makeChaserSquare(row, column);
   }
 
   // Update speed as if apples were eaten
@@ -186,6 +196,10 @@ function init() {
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize the chaser snake with starting position and properties
 function initializeChaserSnake() {
+  // Track last move for stuck detection
+  chaserSnake.lastMoveTime = Date.now();
+  chaserSnake.lastHeadRow = null;
+  chaserSnake.lastHeadCol = null;
   chaserSnake.lastDistanceToPlayer = null;
   chaserSnake.lastMoveDirection = null;
   chaserSnake.repeatMoveCounter = 0;
@@ -239,6 +253,23 @@ function updateChaserSnake() {
 
   var distanceToPlayer = Math.abs(chaserSnake.head.row - snake.head.row) + Math.abs(chaserSnake.head.column - snake.head.column);
 
+  // Apple Hunt logic is exclusive: if in Apple Hunt or Standby, ignore all other strategy logic
+  if (chaserSnake.strategy === "Apple Hunt" || chaserSnake.strategy === "Apple Hunt Standby") {
+    // If in Apple Hunt Standby, check if time is up
+    if (chaserSnake.strategy === "Apple Hunt Standby") {
+      if (Date.now() - chaserSnake.appleHuntWaitStart > 5500) {
+        chaserSnake.strategy = null;
+        chaserSnake.appleHuntWaitStart = null;
+        chaserSnake.appleHuntCooldown = true;
+        setTimeout(function() { chaserSnake.appleHuntCooldown = false; }, 45000); // 45 seconds cooldown
+      }
+    }
+    var nextMove = calculateChaserMove();
+    moveChaserSnake(nextMove);
+    return;
+  }
+
+  // Only run normal chaser logic if not in Apple Hunt or Standby
   if (chaserSnake.moveCounter % 2 === 0) {
     if (distanceToPlayer > 10) {
       chaserSnake.strategy = "hunt";
@@ -253,18 +284,19 @@ function updateChaserSnake() {
       var newStrategy = options[Math.floor(Math.random() * options.length)];
       if (newStrategy !== chaserSnake.strategy) {
         chaserSnake.strategy = newStrategy;
-       // console.log("Strategy switch: " + chaserSnake.strategy);
       }
-}
-
+    }
   }
 
   if (chaserSnake.lastStrategy !== chaserSnake.strategy) {
- //   console.log("Chaser switched to: " + chaserSnake.strategy);
     chaserSnake.lastStrategy = chaserSnake.strategy;
     chaserSnake.strategyChangeCounter++;
   }
 
+  // Apple Hunt strategy: only after score 21 and with 20% chance, and only if not on cooldown
+  if (score >= 21 && !chaserSnake.appleHuntCooldown && Math.random() < 0.20) {
+    chaserSnake.strategy = "Apple Hunt";
+  }
   var nextMove = calculateChaserMove();
   moveChaserSnake(nextMove);
 }
@@ -310,6 +342,12 @@ function calculateChaserMove() {
   }
 
   var bestMove;
+  // Helper: prefer moves that actually change position
+  function preferMovingMove(moves) {
+    return moves.filter(function(move) {
+      return move.row !== chaserSnake.head.row || move.column !== chaserSnake.head.column;
+    });
+  }
 
   // Choose move based on current AI strategy
   switch (chaserSnake.strategy) {
@@ -321,6 +359,43 @@ function calculateChaserMove() {
       break;
     case "ambush":
       bestMove = ambushPlayer(possibleMoves, playerRow, playerCol);
+      break;
+    case "Apple Hunt":
+      // Go for the apple: pick move that minimizes distance to apple
+      var minAppleDist = Infinity;
+      possibleMoves.forEach(function(move) {
+        var dist = Math.abs(move.row - apple.row) + Math.abs(move.column - apple.column);
+        if (dist < minAppleDist) {
+          minAppleDist = dist;
+          bestMove = move;
+        }
+      });
+      // If chaser reaches apple, switch to wait mode
+      if (bestMove && bestMove.row === apple.row && bestMove.column === apple.column) {
+        chaserSnake.strategy = "Apple Hunt Standby";
+        chaserSnake.appleHuntWaitStart = Date.now();
+      }
+      break;
+    case "Apple Hunt Standby":
+      // If player is adjacent to apple, chaser should try to intercept/attack the player
+      var playerNearApple = (Math.abs(playerRow - apple.row) <= 1 && Math.abs(playerCol - apple.column) <= 1);
+      if (playerNearApple) {
+        // Move toward the player (attack/guard apple)
+        bestMove = huntPlayer(possibleMoves, playerRow, playerCol);
+      } else {
+        // Just guard the apple: pick any adjacent square around apple (not on top of apple)
+        var adjMoves = possibleMoves.filter(function(move) {
+          var dr = Math.abs(move.row - apple.row);
+          var dc = Math.abs(move.column - apple.column);
+          return (dr <= 1 && dc <= 1) && !(move.row === apple.row && move.column === apple.column);
+        });
+        if (adjMoves.length > 0) {
+          bestMove = adjMoves[Math.floor(Math.random() * adjMoves.length)];
+        } else {
+          // As last resort, pick any move
+          bestMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+        }
+      }
       break;
     default:
       // Fallback: random move
@@ -727,33 +802,35 @@ function handleAppleCollision() {
   makeApple();
 
   // --- Snake body management ---
-  if (score >= 21) {
-    // If snake is longer than 1, remove tail instead of growing
-    if (snake.body.length > 1) {
-      let tail = snake.body.pop();
-      if (tail.element) tail.element.remove();
-      snake.tail = snake.body[snake.body.length - 1];
-    } else {
-      // If only head remains, start growing again as normal
-      addSnakeSegmentAtTail();
-    }
-  } else {
-    // Regular growth before score 21
-    addSnakeSegmentAtTail();
-  }
+  // if (score >= 21) {
+  //   // If snake is longer than 1, remove tail instead of growing
+  //   if (snake.body.length > 1) {
+  //     let tail = snake.body.pop();
+  //     if (tail.element) tail.element.remove();
+  //     snake.tail = snake.body[snake.body.length - 1];
+  //   } else {
+  //     // If only head remains, start growing again as normal
+  //     addSnakeSegmentAtTail();
+  //   }
+  // } else {
+  //   // Regular growth before score 21
+  //   addSnakeSegmentAtTail();
+  // }
+  // Always grow
+  addSnakeSegmentAtTail();
 
   // --- Chaser body management ---
-  if (score >= 21) {
-    // Remove chaser tail if longer than 1
-    if (chaserSnake.body && chaserSnake.body.length > 1) {
-      let tail = chaserSnake.body.pop();
-      if (tail.element) tail.element.remove();
-      chaserSnake.tail = chaserSnake.body[chaserSnake.body.length - 1];
-    } else {
-      // If only head remains, start growing again as normal
-      chaserSnake.growPending++;
-    }
-  }
+  // if (score >= 21) {
+  //   // Remove chaser tail if longer than 1
+  //   if (chaserSnake.body && chaserSnake.body.length > 1) {
+  //     let tail = chaserSnake.body.pop();
+  //     if (tail.element) tail.element.remove();
+  //     chaserSnake.tail = chaserSnake.body[chaserSnake.body.length - 1];
+  //   } else {
+  //     // If only head remains, start growing again as normal
+  //     chaserSnake.growPending++;
+  //   }
+  // }
 }
 
 // Helper to add a segment at the snake's tail (same logic as before)
@@ -1024,7 +1101,7 @@ function increaseGameSpeed() {
   // The lower the value, the faster the chaser moves (1 = every tick, 2 = every other tick)
   // We want chaserSnake.speed to decrease as snake gets faster, but never be less than 1.1
   // and never more than 2.2 (tunable for balance)
-  var minChaserSpeed = 1.07; // fastest (chaser moves almost every tick)
+  var minChaserSpeed = 1.02; // fastest (chaser moves almost every tick)
   var maxChaserSpeed = 1.8; // slowest (chaser moves every 2.2 ticks)
   var minInterval = 63; // fastest snake
   var maxInterval = 115; // slowest snake
