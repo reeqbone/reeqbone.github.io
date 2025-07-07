@@ -1,10 +1,14 @@
+// GOD MODE VARIABLE
+let godMode = false;
+let snakeStunned = false;
+let stunTimeout = null;
 //  Set Score Debug Feature
 function setScoreDebug(newScore) {
   // Clamp to 0-20 only, and show error if above 20
   newScore = parseInt(newScore);
   if (isNaN(newScore) || newScore < 0) newScore = 0;
-  if (newScore > 20) {
-    alert("Score cannot be set above 20!");
+  if (newScore > 99999) {
+    alert("Score cannot be set above 99999!");
     return;
   }
   score = newScore;
@@ -20,7 +24,7 @@ function setScoreDebug(newScore) {
     snake.tail = snake.body[0];
   }
   // Grow or shrink snake to match score and handle >=21 logic
-  let growMode = score < 21;
+  let growMode = score < 99999;
   let segments = growMode ? score : 1; // If score >=21, only head remains
   for (let i = 1; i <= segments; i++) {
     let row = snake.tail.row, column = snake.tail.column;
@@ -151,7 +155,7 @@ function init() {
   if (!document.getElementById("gameInfo")) {
     const infoBox = document.createElement("div");
     infoBox.id = "gameInfo";
-    ["speedDisplay", "strategyDisplay", "chaserSpeedDisplay"].forEach(id => {
+    ["speedDisplay", "strategyDisplay", "chaserSpeedDisplay", "godModeDisplay"].forEach(id => {
       const div = document.createElement("div");
       div.id = id;
       div.className = "info-box";
@@ -583,6 +587,39 @@ function findEmergencyMove() {
 
 // Move the chaser snake's body and head to the next position
 function moveChaserSnake(nextMove) {
+  // --- Chaser stuck detection ---
+  // Track last position and time
+  if (!chaserSnake._lastMove) {
+    chaserSnake._lastMove = { row: chaserSnake.head.row, col: chaserSnake.head.column, time: Date.now() };
+    chaserSnake._stuckTimer = null;
+  } else {
+    if (chaserSnake.head.row === chaserSnake._lastMove.row && chaserSnake.head.column === chaserSnake._lastMove.col) {
+      // Not moved
+      if (!chaserSnake._stuckTimer) {
+        chaserSnake._stuckTimer = setTimeout(function() {
+          // Clear board of chaser and apple only
+          if (chaserSnake.body) {
+            chaserSnake.body.forEach(function(part) { if (part.element) part.element.remove(); });
+        chaserSnake.body = [];
+        chaserSnake.head = null;
+        chaserSnake.tail = null;
+      }
+      if (apple && apple.element) apple.element.remove();
+      // Respawn chaser and apple only
+      initializeChaserSnake();
+      chaserSnake.speed = 0.88; // Set new chaser speed after respawn
+      makeApple();
+        }, 5000);
+      }
+    } else {
+      // Moved, reset stuck timer
+      if (chaserSnake._stuckTimer) {
+        clearTimeout(chaserSnake._stuckTimer);
+        chaserSnake._stuckTimer = null;
+      }
+      chaserSnake._lastMove = { row: chaserSnake.head.row, col: chaserSnake.head.column, time: Date.now() };
+    }
+  }
   if (!nextMove) return;
 
   // Grow if pending
@@ -603,18 +640,25 @@ function moveChaserSnake(nextMove) {
     repositionSquare(chaserSquare);
   }
 
-  // Move head to the new position
-  chaserSnake.head.row = nextMove.row;
-  chaserSnake.head.column = nextMove.column;
+  // --- Bump against wall logic for chaser ---
+  let newRow = nextMove.row;
+  let newCol = nextMove.column;
+  // Prevent chaser from moving outside the board; bump against wall
+  if (newCol < 0) newCol = 0;
+  if (newCol >= COLUMNS) newCol = COLUMNS - 1;
+  if (newRow < 0) newRow = 0;
+  if (newRow >= ROWS) newRow = ROWS - 1;
+
+  chaserSnake.head.row = newRow;
+  chaserSnake.head.column = newCol;
   repositionSquare(chaserSnake.head);
 
   if (chaserSnake.lastMoveDirection === nextMove.direction) {
-  chaserSnake.repeatMoveCounter++;
+    chaserSnake.repeatMoveCounter++;
   } else {
-  chaserSnake.repeatMoveCounter = 0;
+    chaserSnake.repeatMoveCounter = 0;
   }
   chaserSnake.lastMoveDirection = nextMove.direction;
-
 }
 
 // Check if the player's head has collided with any part of the chaser snake
@@ -652,6 +696,9 @@ handleAppleCollision = function() {
  * collisions with the walls.
  */
 function update() {
+  // Update God Mode info UI
+  const godModeEl = document.getElementById("godModeDisplay");
+  if (godModeEl) godModeEl.textContent = "God Mode: " + (godMode ? "True" : "False");
   // Update UI info
   const speedEl = document.getElementById("speedDisplay");
   const chaserSpeedEl = document.getElementById("chaserSpeedDisplay");
@@ -662,15 +709,25 @@ function update() {
   if (isPaused) return;
 
   // Move snakes
-  moveSnake();
+  if (!snakeStunned) {
+    moveSnake();
+  }
   updateChaserSnake();
 
   // Only process one event per tick, in priority order:
   // 1. Wall/self/chaser collision (game over)
   // 2. Apple collision (only if not game over)
-  if (hasHitWall() || hasCollidedWithSnake() || hasCollidedWithChaser()) {
+  if (hasHitWall() || (!godMode && (hasCollidedWithSnake() || hasCollidedWithChaser()))) {
     endGame();
     return; // Prevent further processing this tick
+  }
+  if (godMode) {
+    // In God Mode, only stun if colliding with chaser
+    if (!snakeStunned && hasCollidedWithChaser()) {
+      snakeStunned = true;
+      if (stunTimeout) clearTimeout(stunTimeout);
+      stunTimeout = setTimeout(() => { snakeStunned = false; }, 1000);
+    }
   }
 
   if (hasCollidedWithApple()) {
@@ -680,6 +737,7 @@ function update() {
 
 function checkForNewDirection(event) {
   // Only allow direction changes if the new direction is perpendicular or not directly opposite to the current direction
+  if (snakeStunned) return; // Can't change direction while stunned
   var dir = snake.head.direction;
 
   // Arrow keys
@@ -692,6 +750,17 @@ function checkForNewDirection(event) {
   else if (activeKey === KEY.D && dir !== "left") snake.head.direction = "right";
   else if (activeKey === KEY.W && dir !== "down") snake.head.direction = "up";
   else if (activeKey === KEY.S && dir !== "up") snake.head.direction = "down";
+// GOD MODE KEYBIND: Shift+G
+$('body').off('keydown.godMode').on('keydown.godMode', function(event) {
+  if (event.shiftKey && event.key.toLowerCase() === 'g') {
+    godMode = !godMode;
+    // If disabling god mode, also clear stun
+    if (!godMode) {
+      snakeStunned = false;
+      if (stunTimeout) clearTimeout(stunTimeout);
+    }
+  }
+});
 }
 
 function moveSnake() {
@@ -704,10 +773,13 @@ function moveSnake() {
   column/row properties. 
   
   */
- for (var i = snake.body.length - 1; i > 0; i--) {
+  // Make the body follow the head faster if score >= 25
+  let followStep = (score >= 25) ? 2 : 1;
+  for (let i = snake.body.length - 1; i > 0; i--) {
+    let targetIdx = i - followStep;
+    if (targetIdx < 0) targetIdx = 0;
     var snakeSquare = snake.body[i];
-
-    var nextSnakeSquare = snake.body[i - 1];
+    var nextSnakeSquare = snake.body[targetIdx];
     var nextRow = nextSnakeSquare.row;
     var nextColumn = nextSnakeSquare.column;
     var nextDirection = nextSnakeSquare.direction;
@@ -716,7 +788,7 @@ function moveSnake() {
     snakeSquare.row = nextRow;
     snakeSquare.column = nextColumn;
     repositionSquare(snakeSquare);
- }
+  }
 
   //Before moving the head, check for a new direction from the keyboard input
   checkForNewDirection();
@@ -728,17 +800,30 @@ function moveSnake() {
   of snake.head.direction which may be one of "left", "right", "up", or "down"
   */
 
-  if (snake.head.direction === "left") {
-    snake.head.column = snake.head.column - 1;
-  }
-  else if (snake.head.direction === "right") {
-    snake.head.column = snake.head.column + 1;
-  }
-  else if (snake.head.direction === "down") {
-    snake.head.row = snake.head.row + 1;
-  }
-  else if (snake.head.direction === "up") {
-    snake.head.row = snake.head.row - 1;
+  // God mode: prevent moving out of bounds, just "bump" against the wall
+  if (godMode) {
+    if (snake.head.direction === "left") {
+      if (snake.head.column > 0) snake.head.column = snake.head.column - 1;
+    } else if (snake.head.direction === "right") {
+      if (snake.head.column < COLUMNS - 1) snake.head.column = snake.head.column + 1;
+    } else if (snake.head.direction === "down") {
+      if (snake.head.row < ROWS - 1) snake.head.row = snake.head.row + 1;
+    } else if (snake.head.direction === "up") {
+      if (snake.head.row > 0) snake.head.row = snake.head.row - 1;
+    }
+  } else {
+    if (snake.head.direction === "left") {
+      snake.head.column = snake.head.column - 1;
+    }
+    else if (snake.head.direction === "right") {
+      snake.head.column = snake.head.column + 1;
+    }
+    else if (snake.head.direction === "down") {
+      snake.head.row = snake.head.row + 1;
+    }
+    else if (snake.head.direction === "up") {
+      snake.head.row = snake.head.row - 1;
+    }
   }
   repositionSquare(snake.head);
 }
